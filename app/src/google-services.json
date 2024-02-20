@@ -1,0 +1,68 @@
+{
+  "project_info": {
+    "project_number": "316762101405",
+    "firebase_url": "https://lignumbd-b32e7-default-rtdb.firebaseio.com",
+    "project_id": "lignumbd-b32e7",
+    "storage_bucket": "lignumbd-b32e7.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:316762101405:android:2b9479b6bca4cbd91c2674",
+        "android_client_info": {
+          "package_name": "com.DefaultCompany.Lignum2"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD_8iA0VGzGhLLqDJO6-Y5ZGB-h-IfApHI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:316762101405:android:28d0f181ceac79a81c2674",
+        "android_client_info": {
+          "package_name": "com.DefaultCompany.com.unity.template.mobile2D"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD_8iA0VGzGhLLqDJO6-Y5ZGB-h-IfApHI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:316762101405:android:9f3a5f41e5fe0f2b1c2674",
+        "android_client_info": {
+          "package_name": "com.example.lignumk"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD_8iA0VGzGhLLqDJO6-Y5ZGB-h-IfApHI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
