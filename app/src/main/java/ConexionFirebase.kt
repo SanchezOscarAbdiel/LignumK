@@ -2,10 +2,10 @@ import android.content.ContentValues.TAG
 import android.util.Log
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import com.google.gson.Gson
 import android.content.Context
 import android.os.Environment
 import com.google.firebase.firestore.FieldValue
+import com.google.gson.Gson
 import org.json.JSONObject
 import java.io.File
 import java.io.FileWriter
@@ -15,8 +15,9 @@ import java.io.FileWriter
 
 class ConexionFirebase {
 
-    val db = Firebase.firestore
 
+    val db = Firebase.firestore
+    var rutaArchivo = ""
 
     fun LeerDatos(coleccion: String, campo: String, valor: String, context: Context) {
 
@@ -24,21 +25,27 @@ class ConexionFirebase {
         docRef.get()
             .addOnSuccessListener { result ->
                 val datosDocumentos = result.documents.map { it.data } // Obtener los datos de cada documento
-                val datosFormateados = datosDocumentos.joinToString(separator = ",") { it.toString() } // Formatear los datos
-
+                // Crear un objeto Gson
+                val gson = Gson()
+                // Convertir los datos de los documentos en un arreglo json
+                val datosFormateados = gson.toJson(datosDocumentos)
+                // Imprimir los datos formateados
                 Log.d(TAG, "Datos del documento: $datosFormateados")
 
                 val archivo = File(context.getExternalFilesDir(null), "$coleccion.json")
                 val archivoEscritor = FileWriter(archivo)
-                val rutaArchivo = archivo.path
+
 
                 archivoEscritor.write(datosFormateados) // Escribir los datos formateados en el archivo
                 archivoEscritor.close()
+                Log.d(TAG, "Ruta archivo ${archivo.path.toString()}")
             }
             .addOnFailureListener { exception ->
                 Log.d(TAG, "get failed with ", exception)
             }
+
     }
+
 
     fun PostData(jsonData: String) {
         try {
