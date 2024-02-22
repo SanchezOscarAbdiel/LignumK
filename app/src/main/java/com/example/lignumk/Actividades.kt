@@ -10,7 +10,6 @@ import kotlin.random.Random
 import android.content.Context
 import androidx.work.Constraints
 import androidx.work.Data
-import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequest
 import androidx.work.PeriodicWorkRequest
@@ -19,7 +18,7 @@ import java.util.Calendar
 import java.util.concurrent.TimeUnit
 
 val cFirebaseA = ConexionFirebase()
-val menu = MainActivity()
+
 class Actividades{
 
     fun AsignarTareas(contexto: Context) {
@@ -36,10 +35,15 @@ class Actividades{
         val elemento = json.getJSONObject(indice)
         // Hacer algo con el elemento, por ejemplo, imprimirlo
         Log.d("AsignarTareas", "Elemento al azar en LeerTareas${elemento.get("descripcion")}")
-        /*menu.tvTit.text=elemento.get("titulo").toString()
-        menu.tvDescripcion.text=elemento.get("descripcion").toString()*/
-
         cFirebaseA.LeerDatos("Tareas", "tipo", "diaria", contexto)
+
+        val sharedPref = contexto.getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
+        // Obtener un editor de las SharedPreferences
+        val editor = sharedPref.edit()
+        // Guardar el texto de la variable elemento como un valor asociado a una clave
+        editor.putString("descripcion", elemento.get("descripcion").toString())
+        // Guardar los cambios en el archivo
+        editor.apply()
 
     }
 

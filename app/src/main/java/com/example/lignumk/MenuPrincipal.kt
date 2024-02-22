@@ -4,30 +4,18 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 //Clases
 import ConexionFirebase
-import WorkManagerFile
 
-import android.content.SharedPreferences
 // Importar la clase Context
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
-import android.os.Build
+import android.util.Log
 import android.widget.TextView
-import androidx.work.Constraints
-import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
-import androidx.work.workDataOf
-import androidx.work.Data
-import androidx.work.NetworkType
-import androidx.work.OneTimeWorkRequest
-import androidx.work.PeriodicWorkRequest
-import androidx.work.PeriodicWorkRequestBuilder
-import java.util.concurrent.TimeUnit
 
 
 val cFirebase = ConexionFirebase()
 
-class MainActivity : ComponentActivity() {
+class MenuPrincipal : ComponentActivity() {
 
     private lateinit var workManager: WorkManager
     lateinit var tvTit: TextView
@@ -37,11 +25,23 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         workManager = WorkManager.getInstance(applicationContext)
         setContentView(R.layout.activity_menu_principal)
-        tvTit = findViewById(R.id.tvTitulo)
-        tvDescripcion = findViewById(R.id.tvDescripcion)
         VerificaPrimeraVez()
 
+        tvTit = findViewById(R.id.tvTitulo)
+        tvDescripcion = findViewById(R.id.tvDescripcion)
+
+        tvTit.text="Hola"
+
 }
+
+    override fun onResume() {
+        super.onResume()
+        val sharedPref = getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
+        // Recuperar el texto de la variable elemento usando la misma clave
+        val descripcion = sharedPref.getString("descripcion", "")
+        // Asignar el texto al editText
+        tvDescripcion.text = descripcion
+    }
 
     fun VerificaPrimeraVez(){
         val sharedPref = getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
