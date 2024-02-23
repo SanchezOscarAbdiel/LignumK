@@ -42,6 +42,7 @@ class Actividades{
         val editor = sharedPref.edit()
         // Guardar el texto de la variable elemento como un valor asociado a una clave
         editor.putString("descripcion", elemento.get("descripcion").toString())
+        editor.putString("titulo", elemento.get("titulo").toString())
         // Guardar los cambios en el archivo
         editor.apply()
 
@@ -69,7 +70,7 @@ class Actividades{
         return delay
     }
 
-    fun oneTimeRTareas(contexto: Context){
+    fun periodicRTareas(contexto: Context){
         val miPeriodicWorkRequest = PeriodicWorkRequest.Builder(WorkManagerFile::class.java, 24, TimeUnit.HOURS)
             .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
             .setInputData(Data.Builder().putString("parametro", "AsignaTareas").build())

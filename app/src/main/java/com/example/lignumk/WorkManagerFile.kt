@@ -21,7 +21,7 @@ class WorkManagerFile(context: Context, params: WorkerParameters) : Worker(conte
         // Usar un ciclo when para seleccionar la función
         when (parametro) {
             "AsignarTareas" -> act.AsignarTareas(applicationContext)
-            "EstablecerCiclo" -> act.oneTimeRTareas(applicationContext)
+            "EstablecerCiclo" -> act.periodicRTareas(applicationContext)
             /*"EscribirTareas" -> EscribirTareas()
             "BorrarTareas" -> BorrarTareas()*/
             else -> Log.d("MiWorker", "Parámetro inválido")
