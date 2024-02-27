@@ -21,20 +21,23 @@ val cFirebaseA = ConexionFirebase()
 
 class Actividades{
 
-    fun AsignarTareas(contexto: Context) {
-       val archivo = File(contexto.getExternalFilesDir(null), "Tareas.json")
+    fun leeArchivo(contexto: Context, nombre: String): JSONArray {
+        val archivo = File(contexto.getExternalFilesDir(null), "$nombre.json")
         val archivoLector = FileReader(archivo)
         val contenido = archivoLector.readText()
 
-        val json = JSONArray(contenido)
-        Log.d("AsignarTareas", "Contenido en LeerTareas${json}")
+        return JSONArray(contenido)
+    }
+
+    fun AsignarTareas(contexto: Context) {
+        val json = leeArchivo(contexto, "Tareas")
 
         // Generar un número aleatorio entre 0 y el tamaño del arreglo menos uno
         val indice = Random.nextInt(0, json.length())
         // Obtener el elemento del arreglo json usando el índice
         val elemento = json.getJSONObject(indice)
         // Hacer algo con el elemento, por ejemplo, imprimirlo
-        Log.d("AsignarTareas", "Elemento al azar en LeerTareas${elemento.get("descripcion")}")
+        //Log.d("AsignarTareas", "Elemento al azar en LeerTareas${elemento.get("descripcion")}")
         cFirebaseA.LeerDatos("Tareas", "tipo", "diaria", contexto)
 
         val sharedPref = contexto.getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
@@ -43,7 +46,10 @@ class Actividades{
         // Guardar el texto de la variable elemento como un valor asociado a una clave
         editor.putString("descripcion", elemento.get("descripcion").toString())
         editor.putString("titulo", elemento.get("titulo").toString())
+        val randomInt = (0..1000).random() // Generates a random integer between 0 and 10 (inclusive)
+        editor.putString("Nrandom", randomInt.toString())
         // Guardar los cambios en el archivo
+        Log.d("AsignarTareas", "Tareas asignadas")
         editor.apply()
 
     }
@@ -51,8 +57,9 @@ class Actividades{
     fun oneTimeR(contexto: Context, delay: Long,para: String){
         lateinit var workManager: WorkManager
         workManager = WorkManager.getInstance(contexto)
+        Log.d("Parametro", "Parametro oneTimeR: ${para}")
         val miOneTimeWorkRequest = OneTimeWorkRequest.Builder(WorkManagerFile::class.java)
-            .setConstraints(Constraints.Builder().setRequiresBatteryNotLow(true).build())
+            .setConstraints(Constraints.Builder().setRequiresBatteryNotLow(false).build())
             .setInputData(Data.Builder().putString("parametro", para).build())
             .setInitialDelay(delay, TimeUnit.SECONDS)
             .build()
@@ -60,20 +67,23 @@ class Actividades{
 
     }
 
-    fun SincronizaTareas(): Long{
+    fun SincronizaTareas(): Long {
+        val currentTime = Calendar.getInstance().get(Calendar.HOUR_OF_DAY) // Hora actual
+        val desiredHour = 16 // Hora deseada (7 AM)
+        val desiredMinute = 8 // Minuto deseado (35 minutos)
+        // Calcula la diferencia en milisegundos hasta la próxima ejecución
+        val delay = TimeUnit.HOURS.toMillis(((0 + desiredHour - currentTime) % 24).toLong()) +
+                TimeUnit.MINUTES.toMillis((desiredMinute - Calendar.getInstance().get(Calendar.MINUTE)).toLong())
 
-        val currentTime = Calendar.getInstance().get(Calendar.HOUR_OF_DAY) // 15
-        val desiredTime = 7 // 7 de la mañana
-        val delay = TimeUnit.HOURS.toMillis(((24 + desiredTime - currentTime) % 24).toLong()) // 16 horas en milisegundos
-        Log.d("SincronizaTareas", "El delay es: ${delay}")
-        //Se asigna la tarea ahora - mañana a las 7 - cada 24 horas
+        Log.d("SincronizaTareas", "El delay es: $delay")
         return delay
     }
 
+
     fun periodicRTareas(contexto: Context){
-        val miPeriodicWorkRequest = PeriodicWorkRequest.Builder(WorkManagerFile::class.java, 24, TimeUnit.HOURS)
+        val miPeriodicWorkRequest = PeriodicWorkRequest.Builder(WorkManagerFile::class.java, 15, TimeUnit.MINUTES)
             .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
-            .setInputData(Data.Builder().putString("parametro", "AsignaTareas").build())
+            .setInputData(Data.Builder().putString("parametro", "AsignarTareas").build())
             .build()
         WorkManager.getInstance(contexto).enqueue(miPeriodicWorkRequest)
     }

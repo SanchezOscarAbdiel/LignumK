@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import com.example.lignumk.Actividades
+import com.example.lignumk.PrimeraVez
 import org.json.JSONArray
 import java.io.File
 import java.io.FileReader
@@ -14,16 +15,16 @@ import kotlin.random.Random
 class WorkManagerFile(context: Context, params: WorkerParameters) : Worker(context, params) {
 
     val act = Actividades()
+    val pv = PrimeraVez()
     // Sobrescribir el método doWork
     override fun doWork(): Result {
 
         val parametro = inputData.getString("parametro")
         // Usar un ciclo when para seleccionar la función
+        Log.d("MiWorker", "Parámetro seleccionado: ${parametro}")
         when (parametro) {
             "AsignarTareas" -> act.AsignarTareas(applicationContext)
             "EstablecerCiclo" -> act.periodicRTareas(applicationContext)
-            /*"EscribirTareas" -> EscribirTareas()
-            "BorrarTareas" -> BorrarTareas()*/
             else -> Log.d("MiWorker", "Parámetro inválido")
         }
         return Result.success()

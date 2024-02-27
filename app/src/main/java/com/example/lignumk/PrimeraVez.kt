@@ -7,7 +7,11 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Log
 import android.view.View
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+
 import android.widget.Button
+import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContract
@@ -31,6 +35,7 @@ class PrimeraVez : AppCompatActivity() {
 val actividades = Actividades()
 
     lateinit var BtnGoogle: Button
+    lateinit var SpnPuesto: Spinner
 
     private lateinit var googleSignInClient: GoogleSignInClient
     private lateinit var auth: FirebaseAuth
@@ -40,6 +45,8 @@ val actividades = Actividades()
         setContentView(R.layout.activity_primera_vez)
         BtnGoogle = findViewById(R.id.SingingGoogle)
         auth = Firebase.auth
+        SpnPuesto = findViewById(R.id.SpnPuestos)
+
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken(getString(R.string.default_web_client_id))
             .requestEmail()
@@ -49,28 +56,44 @@ val actividades = Actividades()
         //DescargaArchivos
         //tvA.text ="Descargando archivos..."
         cFirebase.LeerDatos("Tareas", "tipo", "diaria", this)
-        Thread.sleep(2_000)
-
-        //Inicia sesion
-
-        //Dias de descanso
+        Thread.sleep(5000)
 
         //AsignaTareas
         val delay = actividades.SincronizaTareas()
-        Log.d("Primera vez", "delay de la aplicacion: ${delay}")
         actividades.oneTimeR(applicationContext,15,"AsignarTareas") //Se lee el archivo y se extrae la tarea en el momento
-       // tvA.text ="Asignando primera tareas"
-        actividades.oneTimeR(applicationContext,delay,"AsignarTareas") //Se lee el archivo y se extrae la a las 7 am
-        //tvA.text ="Asignando Ciclos"
-      actividades.oneTimeR(applicationContext,delay,"EstablecerCiclo") //Se establece el ciclo una vez que haya pasado el primer delay a las 7 de la mañana
 
+        rellenaSpin()
 
+    }
+
+    public fun rellenaSpin() {
+
+// Crear un adaptador para el spinner con el array de recursos
+        val adapter = ArrayAdapter.createFromResource(this, R.array.combo_puestos, android.R.layout.simple_spinner_item)
+        SpnPuesto.adapter = adapter
+
+        SpnPuesto.onItemSelectedListener = object: AdapterView.OnItemSelectedListener{
+            override fun onItemSelected(
+                parent: AdapterView<*>?,
+                view: View?,
+                position: Int,
+                id: Long
+            ) {
+                val item = adapter.getItem(position)
+
+                val text = item.toString()
+                Toast.makeText(this@PrimeraVez, "Item seleccionado: $text", Toast.LENGTH_SHORT).show()
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                TODO("Not yet implemented")
+            }
+
+        }
     }
 
 
     fun SingingGoogle(view: View){
-
-
         val signIntent = googleSignInClient.signInIntent
         launcher.launch(signIntent)
 

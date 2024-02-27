@@ -20,7 +20,7 @@ class ConexionFirebase {
     var rutaArchivo = ""
 
     fun LeerDatos(coleccion: String, campo: String, valor: String, context: Context) {
-
+        Log.d(TAG, "Entra a leer datos")
         val docRef = db.collection(coleccion).whereEqualTo(campo, valor)
         docRef.get()
             .addOnSuccessListener { result ->
