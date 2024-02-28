@@ -4,323 +4,327 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
     android:background="@color/design_default_color_on_primary"
+    android:fitsSystemWindows="true"
     android:gravity="center"
     android:orientation="vertical"
     tools:context=".PrimeraVez">
-<ScrollView
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content">
-    <LinearLayout
+
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:layout_height="wrap_content">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
-            <Button
-                android:id="@+id/SingingGoogle"
-                style="?attr/buttonBarStyle"
-                android:layout_width="298dp"
-                android:layout_height="48dp"
-                android:contentDescription="standard_icon_btn_desc"
-                android:onClick="SingingGoogle"
-                android:text="Iniciar sesion"
-                app:icon="@drawable/google"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.496"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/chipGroup"
-                app:layout_constraintVertical_bias="0.089" />
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
 
-            <Button
-                android:id="@+id/iconButton"
-                style="?attr/materialIconButtonStyle"
-                android:layout_width="182dp"
-                android:layout_height="66dp"
-                android:layout_marginTop="46dp"
-                android:layout_marginBottom="1dp"
-                android:contentDescription="standard_icon_btn_desc"
-                android:text="Continuar"
-                app:icon="@drawable/flecha_derecha"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.498"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/SpnPuestos" />
+                <Button
+                    android:id="@+id/SingingGoogle"
+                    style="?attr/buttonBarStyle"
+                    android:layout_width="298dp"
+                    android:layout_height="48dp"
+                    android:contentDescription="standard_icon_btn_desc"
+                    android:onClick="SingingGoogle"
+                    android:text="Iniciar sesion"
+                    app:icon="@drawable/google"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.496"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/chipGroup"
+                    app:layout_constraintVertical_bias="0.089" />
 
-            <TextView
-                android:id="@+id/textView2"
-                style="@style/MaterialAlertDialog.Material3.Title.Text.CenterStacked"
-                android:layout_width="305dp"
-                android:layout_height="57dp"
-                android:layout_marginTop="12dp"
-                android:autoSizeMaxTextSize="1000dp"
-                android:autoSizeMinTextSize="1dp"
-                android:autoSizeTextType="uniform"
-                android:text="BIENVENIDO"
-                android:textColor="#914D00"
-                android:textSize="48sp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.047"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                <Button
+                    android:id="@+id/iconButton"
+                    style="?attr/materialIconButtonStyle"
+                    android:layout_width="182dp"
+                    android:layout_height="66dp"
+                    android:layout_marginTop="46dp"
+                    android:layout_marginBottom="1dp"
+                    android:contentDescription="standard_icon_btn_desc"
+                    android:onClick="continuar"
+                    android:text="Continuar"
+                    app:icon="@drawable/flecha_derecha"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.498"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/SpnPuestos" />
+
+                <TextView
+                    android:id="@+id/textView2"
+                    style="@style/MaterialAlertDialog.Material3.Title.Text.CenterStacked"
+                    android:layout_width="305dp"
+                    android:layout_height="57dp"
+                    android:layout_marginTop="12dp"
+                    android:autoSizeMaxTextSize="1000dp"
+                    android:autoSizeMinTextSize="1dp"
+                    android:autoSizeTextType="uniform"
+                    android:text="BIENVENIDO"
+                    android:textColor="#914D00"
+                    android:textSize="48sp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.047"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
 
 
-            <TextView
-                android:id="@+id/textView3"
-                style="@style/MaterialAlertDialog.Material3.Body.Text"
-                android:layout_width="370dp"
-                android:layout_height="39dp"
-                android:layout_marginStart="4dp"
-                android:layout_marginTop="16dp"
-                android:autoSizeMaxTextSize="1000dp"
-                android:autoSizeMinTextSize="1dp"
-                android:autoSizeTextType="uniform"
-                android:text="Vamos a configurar la aplicacion."
-                android:textSize="20sp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.035"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/textView2" />
+                <TextView
+                    android:id="@+id/textView3"
+                    style="@style/MaterialAlertDialog.Material3.Body.Text"
+                    android:layout_width="370dp"
+                    android:layout_height="39dp"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginTop="16dp"
+                    android:autoSizeMaxTextSize="1000dp"
+                    android:autoSizeMinTextSize="1dp"
+                    android:autoSizeTextType="uniform"
+                    android:text="Vamos a configurar la aplicacion."
+                    android:textSize="20sp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.035"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/textView2" />
 
-            <TextView
-                android:id="@+id/textView4"
-                style="@style/MaterialAlertDialog.Material3.Body.Text"
-                android:layout_width="370dp"
-                android:layout_height="39dp"
-                android:layout_marginStart="4dp"
-                android:autoSizeMaxTextSize="1000dp"
-                android:autoSizeMinTextSize="1dp"
-                android:autoSizeTextType="uniform"
-                android:text="1. Elige tus dias de descanso."
-                android:textSize="15sp"
+                <TextView
+                    android:id="@+id/textView4"
+                    style="@style/MaterialAlertDialog.Material3.Body.Text"
+                    android:layout_width="370dp"
+                    android:layout_height="39dp"
+                    android:layout_marginStart="4dp"
+                    android:autoSizeMaxTextSize="1000dp"
+                    android:autoSizeMinTextSize="1dp"
+                    android:autoSizeTextType="uniform"
+                    android:text="1. Elige tus dias de descanso."
+                    android:textSize="15sp"
 
-                app:layout_constraintBottom_toTopOf="@+id/chipGroup"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.035"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/textView3"
-                app:layout_constraintVertical_bias="0.127" />
+                    app:layout_constraintBottom_toTopOf="@+id/chipGroup"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.035"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/textView3"
+                    app:layout_constraintVertical_bias="0.127" />
 
-            <TextView
-                android:id="@+id/textView5"
-                style="@style/MaterialAlertDialog.Material3.Body.Text"
-                android:layout_width="370dp"
-                android:layout_height="39dp"
-                android:layout_marginStart="4dp"
-                android:autoSizeMaxTextSize="1000dp"
-                android:autoSizeMinTextSize="1dp"
-                android:autoSizeTextType="uniform"
-                android:text="2. Inicia sesión con Google."
-                android:textSize="15sp"
-                app:layout_constraintBottom_toTopOf="@+id/SingingGoogle"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.035"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/chipGroup" />
+                <TextView
+                    android:id="@+id/textView5"
+                    style="@style/MaterialAlertDialog.Material3.Body.Text"
+                    android:layout_width="370dp"
+                    android:layout_height="39dp"
+                    android:layout_marginStart="4dp"
+                    android:autoSizeMaxTextSize="1000dp"
+                    android:autoSizeMinTextSize="1dp"
+                    android:autoSizeTextType="uniform"
+                    android:text="2. Inicia sesión con Google."
+                    android:textSize="15sp"
+                    app:layout_constraintBottom_toTopOf="@+id/SingingGoogle"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.035"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/chipGroup" />
 
-            <TextView
-                android:id="@+id/textView12"
-                style="@style/MaterialAlertDialog.Material3.Body.Text"
-                android:layout_width="370dp"
-                android:layout_height="39dp"
-                android:layout_marginStart="4dp"
-                android:layout_marginTop="12dp"
-                android:autoSizeMaxTextSize="1000dp"
-                android:autoSizeMinTextSize="1dp"
-                android:autoSizeTextType="uniform"
-                android:text="4. Elige tu puesto de trabajo."
-                android:textSize="15sp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.035"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/textView7" />
+                <TextView
+                    android:id="@+id/textView12"
+                    style="@style/MaterialAlertDialog.Material3.Body.Text"
+                    android:layout_width="370dp"
+                    android:layout_height="39dp"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginTop="12dp"
+                    android:autoSizeMaxTextSize="1000dp"
+                    android:autoSizeMinTextSize="1dp"
+                    android:autoSizeTextType="uniform"
+                    android:text="4. Elige tu puesto de trabajo."
+                    android:textSize="15sp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.035"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/textView7" />
 
-            <TextView
-                android:id="@+id/textView10"
-                style="@style/MaterialAlertDialog.Material3.Body.Text"
-                android:layout_width="370dp"
-                android:layout_height="39dp"
-                android:layout_marginStart="4dp"
-                android:layout_marginTop="16dp"
-                android:autoSizeMaxTextSize="1000dp"
-                android:autoSizeMinTextSize="1dp"
-                android:autoSizeTextType="uniform"
-                android:text="3. Personaliza tu foto de perfil."
-                android:textSize="15sp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.0"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/CbNotificacion" />
+                <TextView
+                    android:id="@+id/textView10"
+                    style="@style/MaterialAlertDialog.Material3.Body.Text"
+                    android:layout_width="370dp"
+                    android:layout_height="39dp"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginTop="16dp"
+                    android:autoSizeMaxTextSize="1000dp"
+                    android:autoSizeMinTextSize="1dp"
+                    android:autoSizeTextType="uniform"
+                    android:text="3. Personaliza tu foto de perfil."
+                    android:textSize="15sp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.0"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/CbNotificacion" />
 
-            <TextView
-                android:id="@+id/textView7"
-                style="@style/MaterialAlertDialog.Material3.Body.Text"
-                android:layout_width="189dp"
-                android:layout_height="34dp"
-                android:layout_marginStart="4dp"
-                android:layout_marginBottom="104dp"
-                android:autoSizeMaxTextSize="1000dp"
-                android:autoSizeMinTextSize="1dp"
-                android:text="Toca para subir una foto."
-                android:textSize="16sp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.495"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/ImButtonFotoPerfil"
-                app:layout_constraintVertical_bias="0.0" />
+                <TextView
+                    android:id="@+id/textView7"
+                    style="@style/MaterialAlertDialog.Material3.Body.Text"
+                    android:layout_width="189dp"
+                    android:layout_height="34dp"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginBottom="104dp"
+                    android:autoSizeMaxTextSize="1000dp"
+                    android:autoSizeMinTextSize="1dp"
+                    android:text="Toca para subir una foto."
+                    android:textSize="16sp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.495"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/ImButtonFotoPerfil"
+                    app:layout_constraintVertical_bias="0.0" />
 
-            <TextView
-                android:id="@+id/textView8"
-                style="@style/MaterialAlertDialog.Material3.Body.Text"
-                android:layout_width="345dp"
-                android:layout_height="30dp"
-                android:layout_marginStart="4dp"
-                android:layout_marginTop="8dp"
-                android:autoSizeMaxTextSize="1000dp"
-                android:autoSizeMinTextSize="1dp"
-                android:text="Tambien puedes dejar tu foto de Gmail."
-                android:textSize="16sp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.39"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/textView10" />
+                <TextView
+                    android:id="@+id/textView8"
+                    style="@style/MaterialAlertDialog.Material3.Body.Text"
+                    android:layout_width="345dp"
+                    android:layout_height="30dp"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginTop="8dp"
+                    android:autoSizeMaxTextSize="1000dp"
+                    android:autoSizeMinTextSize="1dp"
+                    android:text="Tambien puedes dejar tu foto de Gmail."
+                    android:textSize="16sp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.39"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/textView10" />
 
-            <com.google.android.material.chip.ChipGroup
-                android:id="@+id/chipGroup"
-                style="?attr/materialIconButtonStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="56dp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/textView3">
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chipLunes"
-                    style="@style/Widget.Material3.Chip.Filter"
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/chipGroup"
+                    style="?attr/materialIconButtonStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Lunes"
-                    tools:layout_editor_absoluteX="73dp"
-                    tools:layout_editor_absoluteY="200dp" />
+                    android:layout_marginTop="56dp"
+                    android:onClick="SelectedChip"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/textView3">
 
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chipMartes"
-                    style="@style/Widget.Material3.Chip.Filter"
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipLunes"
+                        style="@style/Widget.Material3.Chip.Filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Lunes"
+                        tools:layout_editor_absoluteX="73dp"
+                        tools:layout_editor_absoluteY="200dp" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipMartes"
+                        style="@style/Widget.Material3.Chip.Filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Martes"
+                        tools:layout_editor_absoluteX="73dp"
+                        tools:layout_editor_absoluteY="200dp" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipMiercoles"
+                        style="@style/Widget.Material3.Chip.Filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Miercoles"
+                        tools:layout_editor_absoluteX="73dp"
+                        tools:layout_editor_absoluteY="200dp" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipJueves"
+                        style="@style/Widget.Material3.Chip.Filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Jueves"
+                        tools:layout_editor_absoluteX="73dp"
+                        tools:layout_editor_absoluteY="200dp" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipViernes"
+                        style="@style/Widget.Material3.Chip.Filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Viernes"
+                        tools:layout_editor_absoluteX="173dp"
+                        tools:layout_editor_absoluteY="200dp" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipSabado"
+                        style="@style/Widget.Material3.Chip.Filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Sabado"
+                        tools:layout_editor_absoluteX="73dp"
+                        tools:layout_editor_absoluteY="200dp" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipDomingo"
+                        style="@style/Widget.Material3.Chip.Filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Domingo"
+                        tools:layout_editor_absoluteX="73dp"
+                        tools:layout_editor_absoluteY="200dp" />
+
+                </com.google.android.material.chip.ChipGroup>
+
+                <CheckBox
+                    android:id="@+id/CbNotificacion"
+                    style="@style/Widget.Material3.CheckedTextView"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Martes"
-                    tools:layout_editor_absoluteX="73dp"
-                    tools:layout_editor_absoluteY="200dp" />
+                    android:layout_marginTop="8dp"
+                    android:text="Enviame noticias al correo."
+                    app:layout_constraintBottom_toTopOf="@+id/iconButton"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/SingingGoogle"
+                    app:layout_constraintVertical_bias="0.0" />
 
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chipMiercoles"
-                    style="@style/Widget.Material3.Chip.Filter"
+                <ImageButton
+                    android:id="@+id/ImButtonFotoPerfil"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_marginTop="24dp"
+                    app:layout_constraintDimensionRatio="1:1"
+                    app:layout_constraintEnd_toStartOf="@+id/guideline2"
+                    app:layout_constraintHorizontal_bias="0.0"
+                    app:layout_constraintStart_toStartOf="@+id/guideline"
+                    app:layout_constraintTop_toBottomOf="@+id/textView8"
+                    tools:srcCompat="@tools:sample/avatars" />
+
+                <androidx.constraintlayout.widget.Guideline
+                    android:id="@+id/guideline"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Miercoles"
-                    tools:layout_editor_absoluteX="73dp"
-                    tools:layout_editor_absoluteY="200dp" />
+                    android:orientation="vertical"
+                    app:layout_constraintGuide_percent="0.30" />
 
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chipJueves"
-                    style="@style/Widget.Material3.Chip.Filter"
+                <androidx.constraintlayout.widget.Guideline
+                    android:id="@+id/guideline2"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Jueves"
-                    tools:layout_editor_absoluteX="73dp"
-                    tools:layout_editor_absoluteY="200dp" />
+                    android:orientation="vertical"
+                    app:layout_constraintGuide_percent="0.70" />
 
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chipViernes"
-                    style="@style/Widget.Material3.Chip.Filter"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Viernes"
-                    tools:layout_editor_absoluteX="173dp"
-                    tools:layout_editor_absoluteY="200dp" />
+                <Spinner
+                    android:id="@+id/SpnPuestos"
+                    android:layout_width="216dp"
+                    android:layout_height="63dp"
+                    android:layout_marginTop="20dp"
+                    android:outlineAmbientShadowColor="@color/design_default_color_on_primary"
+                    app:layout_constraintBottom_toTopOf="@+id/iconButton"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.497"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/textView12"
+                    app:layout_constraintVertical_bias="0.0" />
 
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chipSabado"
-                    style="@style/Widget.Material3.Chip.Filter"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Sabado"
-                    tools:layout_editor_absoluteX="73dp"
-                    tools:layout_editor_absoluteY="200dp" />
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chipDomingo"
-                    style="@style/Widget.Material3.Chip.Filter"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Domingo"
-                    tools:layout_editor_absoluteX="73dp"
-                    tools:layout_editor_absoluteY="200dp" />
-
-            </com.google.android.material.chip.ChipGroup>
-
-            <CheckBox
-                android:id="@+id/CbNotificacion"
-                style="@style/Widget.Material3.CheckedTextView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="Enviame noticias al correo."
-                app:layout_constraintBottom_toTopOf="@+id/iconButton"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/SingingGoogle"
-                app:layout_constraintVertical_bias="0.0" />
-
-            <ImageButton
-                android:id="@+id/ImButtonFotoPerfil"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:layout_marginTop="24dp"
-                app:layout_constraintDimensionRatio="1:1"
-                app:layout_constraintEnd_toStartOf="@+id/guideline2"
-                app:layout_constraintHorizontal_bias="0.0"
-                app:layout_constraintStart_toStartOf="@+id/guideline"
-                app:layout_constraintTop_toBottomOf="@+id/textView8"
-                tools:srcCompat="@tools:sample/avatars" />
-
-            <androidx.constraintlayout.widget.Guideline
-                android:id="@+id/guideline"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                app:layout_constraintGuide_percent="0.30" />
-
-            <androidx.constraintlayout.widget.Guideline
-                android:id="@+id/guideline2"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                app:layout_constraintGuide_percent="0.70" />
-
-            <Spinner
-                android:id="@+id/SpnPuestos"
-                android:layout_width="216dp"
-                android:layout_height="63dp"
-                android:layout_marginTop="20dp"
-                android:outlineAmbientShadowColor="@color/design_default_color_on_primary"
-                app:layout_constraintBottom_toTopOf="@+id/iconButton"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.497"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/textView12"
-                app:layout_constraintVertical_bias="0.0" />
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-    </LinearLayout>
-</ScrollView>
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </LinearLayout>
+    </ScrollView>
 
 </LinearLayout>

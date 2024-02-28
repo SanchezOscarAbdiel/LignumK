@@ -8,12 +8,15 @@ import java.io.File
 import java.io.FileReader
 import kotlin.random.Random
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import androidx.work.Constraints
 import androidx.work.Data
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequest
 import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkManager
+import java.io.FileNotFoundException
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
 
@@ -25,34 +28,43 @@ class Actividades{
         val archivo = File(contexto.getExternalFilesDir(null), "$nombre.json")
         val archivoLector = FileReader(archivo)
         val contenido = archivoLector.readText()
-
         return JSONArray(contenido)
     }
 
+
+
     fun AsignarTareas(contexto: Context) {
-        val json = leeArchivo(contexto, "Tareas")
+        try {
+            val json = leeArchivo(contexto, "Tareas")
 
-        // Generar un número aleatorio entre 0 y el tamaño del arreglo menos uno
-        val indice = Random.nextInt(0, json.length())
-        // Obtener el elemento del arreglo json usando el índice
-        val elemento = json.getJSONObject(indice)
-        // Hacer algo con el elemento, por ejemplo, imprimirlo
-        //Log.d("AsignarTareas", "Elemento al azar en LeerTareas${elemento.get("descripcion")}")
-        cFirebaseA.LeerDatos("Tareas", "tipo", "diaria", contexto)
+            // Generar un número aleatorio entre 0 y el tamaño del arreglo menos uno
+            val indice = Random.nextInt(0, json.length())
+            // Obtener el elemento del arreglo json usando el índice
+            val elemento = json.getJSONObject(indice)
+            // Hacer algo con el elemento, por ejemplo, imprimirlo
+            cFirebaseA.LeerDatos("Tareas", "tipo", "diaria", contexto)
 
-        val sharedPref = contexto.getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
-        // Obtener un editor de las SharedPreferences
-        val editor = sharedPref.edit()
-        // Guardar el texto de la variable elemento como un valor asociado a una clave
-        editor.putString("descripcion", elemento.get("descripcion").toString())
-        editor.putString("titulo", elemento.get("titulo").toString())
-        val randomInt = (0..1000).random() // Generates a random integer between 0 and 10 (inclusive)
-        editor.putString("Nrandom", randomInt.toString())
-        // Guardar los cambios en el archivo
-        Log.d("AsignarTareas", "Tareas asignadas")
-        editor.apply()
-
+            val sharedPref = contexto.getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
+            // Obtener un editor de las SharedPreferences
+            val editor = sharedPref.edit()
+            // Guardar el texto de la variable elemento como un valor asociado a una clave
+            editor.putString("descripcion", elemento.get("descripcion").toString())
+            editor.putString("titulo", elemento.get("titulo").toString())
+            val randomInt = (0..1000).random() // Generates a random integer between 0 and 10 (inclusive)
+            editor.putString("Nrandom", randomInt.toString())
+            // Guardar los cambios en el archivo
+            Log.d("AsignarTareas", "Tareas asignadas")
+            editor.apply()
+        } catch (e: FileNotFoundException) {
+            Log.d("TAG", "Archivo no encontrado, reintentando en 5 segundos", e)
+            Handler(Looper.getMainLooper()).postDelayed({
+                // Reintentar AsignarTareas después de 5 segundos
+                AsignarTareas(contexto)
+            }, 5000)
+        }
     }
+
+
 
     fun oneTimeR(contexto: Context, delay: Long,para: String){
         lateinit var workManager: WorkManager

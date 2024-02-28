@@ -21,6 +21,7 @@ class ConexionFirebase {
 
     fun LeerDatos(coleccion: String, campo: String, valor: String, context: Context) {
         Log.d(TAG, "Entra a leer datos")
+
         val docRef = db.collection(coleccion).whereEqualTo(campo, valor)
         docRef.get()
             .addOnSuccessListener { result ->
@@ -34,8 +35,6 @@ class ConexionFirebase {
 
                 val archivo = File(context.getExternalFilesDir(null), "$coleccion.json")
                 val archivoEscritor = FileWriter(archivo)
-
-
                 archivoEscritor.write(datosFormateados) // Escribir los datos formateados en el archivo
                 archivoEscritor.close()
                 Log.d(TAG, "Ruta archivo ${archivo.path.toString()}")
@@ -43,7 +42,6 @@ class ConexionFirebase {
             .addOnFailureListener { exception ->
                 Log.d(TAG, "get failed with ", exception)
             }
-
     }
 
 
