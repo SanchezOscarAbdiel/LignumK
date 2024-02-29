@@ -75,6 +75,9 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+    implementation("androidx.activity:activity-ktx:1.8.2")
+
+    implementation ("com.github.bumptech.glide:glide:4.11.0")
 
     //Firebase
     implementation(platform("com.google.firebase:firebase-bom:32.7.2"))

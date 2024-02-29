@@ -5,19 +5,26 @@ import androidx.appcompat.app.AppCompatActivity
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.net.Uri
 import android.util.Log
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 
 import android.widget.Button
+import android.widget.CheckBox
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import com.example.lignumk.databinding.ActivityPrimeraVezBinding
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
@@ -32,8 +39,25 @@ import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.auth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import org.json.JSONObject
+import java.io.ByteArrayOutputStream
 import java.util.concurrent.Executors
 import kotlin.random.Random
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts.GetContent
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.painter.*
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
+import coil.compose.ImagePainter
+import coil.compose.rememberImagePainter
 
 
 class PrimeraVez : AppCompatActivity() {
@@ -43,9 +67,15 @@ val actividades = Actividades()
     lateinit var SpnPuesto: Spinner
     lateinit var chGrop: ChipGroup
     lateinit var imgBtn: ImageButton
+    lateinit var cbCorreo: CheckBox
 
     var esAut = false
     var esSpn = false
+    var Puid = ""
+    lateinit var Pimg:ByteArray
+    lateinit var Pspinner: String
+
+
 
     private lateinit var googleSignInClient: GoogleSignInClient
     private lateinit var auth: FirebaseAuth
@@ -61,6 +91,7 @@ val actividades = Actividades()
         SpnPuesto = findViewById(R.id.SpnPuestos)
         chGrop = findViewById(R.id.chipGroup)
         imgBtn = findViewById(R.id.ImButtonFotoPerfil)
+        cbCorreo = findViewById(R.id.CbNotificacion)
 
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken(getString(R.string.default_web_client_id))
@@ -78,19 +109,52 @@ val actividades = Actividades()
 
     }
 
+
+    fun seleccionaImagen(view: View){
+        val pickMedia = registerForActivityResult(ActivityResultContracts.PickVisualMedia()){
+                uri ->
+            if (uri!= null){
+                imgBtn.setImageURI(uri)
+                val inputStream = contentResolver.openInputStream(uri)
+                Pimg = inputStream?.readBytes()!!
+            }else{
+
+            }
+        }
+    pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+
+    }
+
     fun continuar(view: View){
 
-        val chipsSeleccionados = chGrop.checkedChipIds // Obtiene los IDs de los Chips seleccionados
-
-        for (id in chipsSeleccionados) {
+        val chipsSeleccionados = chGrop.checkedChipIds.map { id ->
             val chip = findViewById<Chip>(id)
-            Log.d("ChipGroup", "Chip seleccionado: ${chip.text}")
+            chip.text.toString()
         }
 
         if(chipsSeleccionados.isNotEmpty() && esAut && esSpn){
+
+            val jsonObject = JSONObject()
+
+// Agregar las propiedades del mapa al objeto JSON
+            jsonObject.put("coleccion", "Usuarios")
+            jsonObject.put("documento", Puid)
+            jsonObject.put("Fperfil", Pimg)
+            jsonObject.put("Notificaciones", cbCorreo.isChecked)
+            jsonObject.put("Puesto", Pspinner)
+            jsonObject.put("Ddescanso", chipsSeleccionados)
+
+// Convertir el objeto JSON a una cadena JSON
+            val jsonDatos = jsonObject.toString()
+
+// Imprimir el JSON (puedes guardarlo en un archivo o enviarlo a un servidor)
+            Log.d("Datos en JSON", jsonDatos)
+            cFirebase.PostData(jsonDatos)
+            Thread.sleep(5000)
+
             val intent = Intent(this, MenuPrincipal::class.java)
             startActivity(intent)
-            finish()
+
         }else{
             Toast.makeText(this,"Selecciona todos los campos.", Toast.LENGTH_SHORT).show()
         }
@@ -120,8 +184,8 @@ val actividades = Actividades()
             ) {
                 val item = adapter.getItem(position)
 
-                val text = item.toString()
-                Toast.makeText(this@PrimeraVez, "Item seleccionado: $text", Toast.LENGTH_SHORT).show()
+                Pspinner = item.toString()
+                Toast.makeText(this@PrimeraVez, "Item seleccionado: $Pspinner", Toast.LENGTH_SHORT).show()
                 if (position != 0) esSpn = true
             }
 
@@ -188,6 +252,7 @@ val actividades = Actividades()
             val email = it.email
             val photoURL = it.photoUrl
             val emailVerified = it.isEmailVerified
+            Puid = it.uid
 
             //Pase de parametros
 
@@ -213,6 +278,14 @@ val actividades = Actividades()
                         Thread.sleep(1000)
                         //Imagen placed
                         binding.ImButtonFotoPerfil.setImageBitmap(image)
+
+                        // Supongamos que tienes un Bitmap llamado "image"
+                        val stream = ByteArrayOutputStream()
+                        image?.compress(Bitmap.CompressFormat.PNG, 100, stream)
+                        Pimg = stream.toByteArray()
+
+
+
                     }catch (e:InterruptedException){
                         Toast.makeText(this,"Error", Toast.LENGTH_SHORT).show()
                     }
