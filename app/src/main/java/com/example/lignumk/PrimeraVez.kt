@@ -1,5 +1,6 @@
 package com.example.lignumk
 
+import android.content.Context
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import android.content.Intent
@@ -56,8 +57,11 @@ import androidx.compose.ui.graphics.painter.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.core.view.isInvisible
+import androidx.core.view.isVisible
 import coil.compose.ImagePainter
 import coil.compose.rememberImagePainter
+import com.bumptech.glide.Glide
 
 
 class PrimeraVez : AppCompatActivity() {
@@ -68,6 +72,7 @@ val actividades = Actividades()
     lateinit var chGrop: ChipGroup
     lateinit var imgBtn: ImageButton
     lateinit var cbCorreo: CheckBox
+    lateinit var gifCarga: ImageView
 
     var esAut = false
     var esSpn = false
@@ -92,6 +97,10 @@ val actividades = Actividades()
         chGrop = findViewById(R.id.chipGroup)
         imgBtn = findViewById(R.id.ImButtonFotoPerfil)
         cbCorreo = findViewById(R.id.CbNotificacion)
+        gifCarga = findViewById(R.id.imgCargando)
+
+        Glide.with(this).load(R.drawable.cargando).into(gifCarga)
+        gifCarga.visibility = View.GONE
 
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken(getString(R.string.default_web_client_id))
@@ -106,6 +115,7 @@ val actividades = Actividades()
         actividades.AsignarTareas(this) //Se lee el archivo y se extrae la tarea en el momento
 
         rellenaSpin()
+
 
     }
 
@@ -127,6 +137,7 @@ val actividades = Actividades()
 
     fun continuar(view: View){
 
+        gifCarga.visibility = View.VISIBLE
         val chipsSeleccionados = chGrop.checkedChipIds.map { id ->
             val chip = findViewById<Chip>(id)
             chip.text.toString()
@@ -150,6 +161,12 @@ val actividades = Actividades()
 // Imprimir el JSON (puedes guardarlo en un archivo o enviarlo a un servidor)
             Log.d("Datos en JSON", jsonDatos)
             cFirebase.PostData(jsonDatos)
+
+            val sharedPref = this.getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
+            val editor = sharedPref.edit()
+            editor.putString("UID", Puid)
+            editor.apply()
+
             Thread.sleep(5000)
 
             val intent = Intent(this, MenuPrincipal::class.java)
@@ -157,6 +174,7 @@ val actividades = Actividades()
 
         }else{
             Toast.makeText(this,"Selecciona todos los campos.", Toast.LENGTH_SHORT).show()
+            gifCarga.visibility = View.GONE
         }
     }
 
