@@ -85,6 +85,7 @@ val actividades = Actividades()
     private lateinit var googleSignInClient: GoogleSignInClient
     private lateinit var auth: FirebaseAuth
     private lateinit var binding: ActivityPrimeraVezBinding
+    private lateinit var pickMedia: ActivityResultLauncher<PickVisualMediaRequest>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -99,8 +100,26 @@ val actividades = Actividades()
         cbCorreo = findViewById(R.id.CbNotificacion)
         gifCarga = findViewById(R.id.imgCargando)
 
+
         Glide.with(this).load(R.drawable.cargando).into(gifCarga)
         gifCarga.visibility = View.GONE
+
+        pickMedia = registerForActivityResult(ActivityResultContracts.PickVisualMedia()){
+                uri ->
+            if (uri!= null){
+                imgBtn.setImageURI(uri)
+                val inputStream = contentResolver.openInputStream(uri)
+                Pimg = inputStream?.readBytes()!!
+                val sharedPref = this.getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
+                val editor = sharedPref.edit()
+                editor.putString("fotoPerfil", uri.toString())
+                editor.putString("tipoFoto","uri")
+                editor.apply()
+
+            }else{
+
+            }
+        }
 
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken(getString(R.string.default_web_client_id))
@@ -121,17 +140,8 @@ val actividades = Actividades()
 
 
     fun seleccionaImagen(view: View){
-        val pickMedia = registerForActivityResult(ActivityResultContracts.PickVisualMedia()){
-                uri ->
-            if (uri!= null){
-                imgBtn.setImageURI(uri)
-                val inputStream = contentResolver.openInputStream(uri)
-                Pimg = inputStream?.readBytes()!!
-            }else{
 
-            }
-        }
-    pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+        pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
 
     }
 
@@ -154,6 +164,7 @@ val actividades = Actividades()
             jsonObject.put("Notificaciones", cbCorreo.isChecked)
             jsonObject.put("Puesto", Pspinner)
             jsonObject.put("Ddescanso", chipsSeleccionados)
+            jsonObject.put("monedas",0)
 
 // Convertir el objeto JSON a una cadena JSON
             val jsonDatos = jsonObject.toString()
@@ -279,8 +290,6 @@ val actividades = Actividades()
                 esAut = true
             }
 
-
-
             var image:Bitmap? = null
             val imageurl = photoURL.toString()
             val executorService = Executors.newSingleThreadExecutor()
@@ -296,6 +305,13 @@ val actividades = Actividades()
                         Thread.sleep(1000)
                         //Imagen placed
                         binding.ImButtonFotoPerfil.setImageBitmap(image)
+
+                        val sharedPref = this.getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
+                        val editor = sharedPref.edit()
+                        editor.putString("fotoPerfil", image.toString())
+                        editor.putString("UserName",name)
+                        editor.putString("tipoFoto","bitmap")
+                        editor.apply()
 
                         // Supongamos que tienes un Bitmap llamado "image"
                         val stream = ByteArrayOutputStream()

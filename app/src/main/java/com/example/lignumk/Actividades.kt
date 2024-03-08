@@ -2,25 +2,39 @@ package com.example.lignumk
 
 import ConexionFirebase
 import WorkManagerFile
+import android.app.AlertDialog
 import android.util.Log
 import org.json.JSONArray
 import java.io.File
 import java.io.FileReader
 import kotlin.random.Random
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Handler
 import android.os.Looper
+import android.text.Editable
+import android.text.TextWatcher
+import android.widget.EditText
 import androidx.work.Constraints
 import androidx.work.Data
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequest
 import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkManager
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import android.view.LayoutInflater
+import com.google.ai.client.generativeai.GenerativeModel
+import com.google.ai.client.generativeai.type.GenerateContentResponse
+import com.google.ai.client.generativeai.type.content
+
 import java.io.FileNotFoundException
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
 
 val cFirebaseA = ConexionFirebase()
+
 
 class Actividades{
 
@@ -29,6 +43,52 @@ class Actividades{
         val archivoLector = FileReader(archivo)
         val contenido = archivoLector.readText()
         return JSONArray(contenido)
+    }
+
+    suspend fun samAItexto(titulo: String, descripcion: String, respuesta: String,puntos:String): String? {
+        val generativeModel = GenerativeModel(
+            // Use a model that's applicable for your use case (see "Implement basic use cases" below)
+            modelName = "gemini-pro",
+            // Access your API key as a Build Configuration variable (see "Set up your API key" above)
+            apiKey = "AIzaSyDo5BH4jyyrGS28OIpMTdpTL-Zx3oVGKbI"
+        )
+
+        val Prompt = "A un trabajador de una empresa madedera se le asignó una actividad que lleva por titulo: '${titulo}' teniendo que hacer lo siguiente:'${descripcion}'. esta fue su respuesta: '${respuesta}'. puntua su respuesta con un rango de 0 a '${puntos}' (escribe asi: -x/${puntos}-) y escribe un comentario corto"
+        val response = generativeModel.generateContent(Prompt)
+        return response.text
+    }
+
+    suspend fun samAIimagen(contexto: Context, titulo: String){
+
+        val generativeModel = GenerativeModel(
+            // Use a model that's applicable for your use case (see "Implement basic use cases" below)
+            modelName = "gemini-pro-vision",
+            // Access your API key as a Build Configuration variable (see "Set up your API key" above)
+            apiKey = "AIzaSyDo5BH4jyyrGS28OIpMTdpTL-Zx3oVGKbI"
+        )
+        val sharedPref = contexto.getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
+        val uriString = sharedPref.getString("fotoTarea", null)
+        if (uriString != null) {
+            val uri = Uri.parse(uriString)
+            val inputStream = contexto.contentResolver.openInputStream(uri)
+            val bitmap = BitmapFactory.decodeStream(inputStream)
+            // Ahora, puedes usar el Bitmap. Por ejemplo:
+            // myImageView.setImageBitmap(bitmap)
+
+            val image1: Bitmap = bitmap
+
+            val inputContent = content {
+                image(image1)
+                text("What's different between these pictures?")
+            }
+
+            val response = generativeModel.generateContent(inputContent)
+            response.text?.let {
+                popRetroalimentacion(contexto, it, titulo){ number ->
+                }
+            }
+        }
+
     }
 
 
@@ -50,8 +110,8 @@ class Actividades{
             // Guardar el texto de la variable elemento como un valor asociado a una clave
             editor.putString("descripcion", elemento.get("descripcion").toString())
             editor.putString("titulo", elemento.get("titulo").toString())
-            val randomInt = (0..1000).random() // Generates a random integer between 0 and 10 (inclusive)
-            editor.putString("Nrandom", randomInt.toString())
+            editor.putString("subtipo", elemento.get("subtipo").toString())
+            editor.putString("puntos", elemento.get("puntos").toString())
             // Guardar los cambios en el archivo
             Log.d("AsignarTareas", "Tareas asignadas")
             editor.apply()
@@ -63,8 +123,90 @@ class Actividades{
             }, 5000)
         }
     }
+    fun popEscritura(contexto: Context, titulo: String, descripcion: String, callback: (String) -> Unit){
+        val editText = EditText(contexto)
+        val dialog =MaterialAlertDialogBuilder(contexto)
+            .setTitle(titulo)
+            .setMessage(descripcion)
+            .setView(editText)
+            .setNeutralButton("Cancelar") { dialog, which ->
 
+            }
+            .setPositiveButton("Aceptar") { dialog, which ->
+                val inputText = editText.text.toString()
+                callback(inputText)
+            }
+            .show()
 
+        // Establecer un TextWatcher en el EditText
+        editText.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+                // Habilitar el botón de acción positiva solo si el EditText no está vacío
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = !s.isNullOrEmpty()
+            }
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+        })
+
+// Mostrar el dialogo
+        dialog.show()
+
+// Deshabilitar inicialmente el botón de acción positiva
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false
+    }
+
+    fun popRetroalimentacion(contexto: Context,result: String, titulo: String, callback: (String) -> Unit) {
+        val dialog =MaterialAlertDialogBuilder(contexto)
+            .setTitle(titulo)
+            .setMessage(result)
+            .setPositiveButton("Aceptar") { dialog, which ->
+                //Marcar como completada la actividad
+                val regex = Regex("-\\d+/\\d+-")
+                val matchResult = regex.find(result)
+                val score = matchResult?.value
+
+// Ahora, score es "-10/15-", puedes procesarlo más para obtener solo el número
+                val number = score?.substring(1, score.indexOf("/"))  // Esto debería dar "10"
+                if (number != null)
+                    callback(number)
+
+            }
+            .show()
+    }
+
+    fun popImagen(contexto: Context, titulo: String, descripcion: String){
+        val inflater = LayoutInflater.from(contexto)
+        val view = inflater.inflate(R.layout.activity_dialog_foto, null)
+        var texto = view.findViewById<EditText>(R.id.myEditText)
+
+// Crear el dialogo
+        val dialog = MaterialAlertDialogBuilder(contexto)
+            .setTitle(titulo)
+            .setMessage(descripcion)
+            .setView(view)  // Agregar el layout al dialogo
+            .setPositiveButton("Aceptar") { dialog, which ->
+
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+
+        texto.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+                // Habilitar el botón de acción positiva solo si el EditText no está vacío
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = !s.isNullOrEmpty()
+            }
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+        })
+
+// Mostrar el dialogo
+        dialog.show()
+
+// Deshabilitar inicialmente el botón de acción positiva
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false
+    }
 
     fun oneTimeR(contexto: Context, delay: Long,para: String){
         lateinit var workManager: WorkManager

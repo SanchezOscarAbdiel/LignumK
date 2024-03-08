@@ -98,4 +98,8 @@ dependencies {
 
     implementation ("com.google.android.material:material:1.11.0")
 
+    //Chatbot
+    implementation("com.google.ai.client.generativeai:generativeai:0.2.1")
+
+
 }

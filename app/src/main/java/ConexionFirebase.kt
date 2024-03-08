@@ -44,7 +44,6 @@ class ConexionFirebase {
             }
     }
 
-
     fun PostData(jsonData: String) {
         try {
             // Parsear el JSON para obtener la colección, el documento y los campos
@@ -57,7 +56,6 @@ class ConexionFirebase {
                     campos[key] = jsonObject.get(key)
                 }
             }
-
             // Crear una referencia al documento
             val documentReference = db.collection(coleccion).document(documento)
 

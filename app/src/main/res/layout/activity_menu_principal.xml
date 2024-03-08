@@ -4,119 +4,351 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MenuPrincipal">
+    tools:context=".MenuPrincipal"
+    tools:layout_editor_absoluteX="7dp"
+    tools:layout_editor_absoluteY="7dp">
+
 
     <com.google.android.material.card.MaterialCardView
-        android:id="@+id/card"
+        android:id="@+id/layPerfil"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="8dp"
-        android:layout_marginEnd="8dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="50dp"
+        app:cardBackgroundColor="#FFCBA4"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="10dp"
+        app:contentPadding="20dp"
+        app:layout_constraintBottom_toTopOf="@id/layoutRacha"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <!-- ImageView -->
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/fotoPerfil"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:src="@drawable/cargando"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:shapeAppearanceOverlay="@style/circular"
+                app:strokeColor="#2F1500"
+                app:strokeWidth="1dp" />
+
+            <!-- TextView (Nombre de usuario) -->
+            <TextView
+                android:id="@+id/nombreUsuario"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="BIENVENIDO "
+                android:textSize="20dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/fotoPerfil"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <!-- TextView Nuevo (Parte superior derecha) -->
+            <TextView
+                android:id="@+id/tvMonedas"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="$"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
     </com.google.android.material.card.MaterialCardView>
-    <TextView
-        android:id="@+id/tvTitulo"
-        android:layout_width="271dp"
-        android:layout_height="36dp"
-        android:layout_marginTop="200dp"
-        android:text="TituloAct"
-        android:textSize="34sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.114"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
-        android:id="@+id/tvDescripcion"
-        android:layout_width="197dp"
-        android:layout_height="62dp"
-        android:layout_marginStart="107dp"
-        android:layout_marginTop="68dp"
-        android:layout_marginEnd="246dp"
-        android:layout_marginBottom="308dp"
-        android:text="tvDescripcion"
-        android:textSize="16sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.654"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvTitulo"
-        app:layout_constraintVertical_bias="1.0" />
 
-    <TextView
-        android:id="@+id/TVrand"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="TextView"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.501"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvDescripcion"
-        app:layout_constraintVertical_bias="0.313" />
-
-    <LinearLayout
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardTareas"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        tools:layout_editor_absoluteX="8dp"
-        tools:layout_editor_absoluteY="156dp">
+        android:layout_marginTop="30dp"
+        android:onClick="DepCard"
+        app:cardBackgroundColor="#FFCBA4"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="10dp"
+        app:contentPadding="20dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/layoutRacha"
+        app:layout_constraintBottom_toTopOf="@id/cardTareasSemanales">
 
+        <LinearLayout
+            android:id="@+id/lay"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:animateLayoutChanges="true"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/cTVnoti"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tienes una nueva asignacion!"
+                android:textSize="25sp" />
+
+            <ScrollView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+                <RelativeLayout
+                    android:id="@+id/layoutTarea"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:visibility="visible">
+
+                    <TextView
+                        android:id="@+id/cTVtitulo"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Titulo"
+                        android:textSize="18sp" />
+
+                    <TextView
+                        android:id="@+id/cTVDescripcion"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Descripcion"
+                        android:textSize="18sp"
+                        android:layout_below="@id/cTVtitulo" />
+
+                    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+                        android:id="@+id/btnEnviarActividad"
+                        style="@style/Widget.MaterialComponents.Button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Enviar"
+                        android:layout_below="@id/cTVDescripcion"
+                        android:layout_alignParentRight="true"
+                        android:onClick="prueba"
+                        app:icon="@drawable/flecha_derecha" />
+                </RelativeLayout>
+            </ScrollView>
+
+
+        </LinearLayout>
+
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <FrameLayout
+        android:id="@+id/layoutRacha"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="-20dp"
+        app:layout_constraintBottom_toTopOf="@id/cardTareas"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/layPerfil">
+
+        <com.google.android.material.progressindicator.LinearProgressIndicator
+            android:id="@+id/progressBar"
+            android:layout_width="match_parent"
+            android:layout_height="70dp"
+            android:layout_gravity="center_vertical"
+            android:indeterminate="false"
+            android:max="6"
+            android:progress="0" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp">
+            android:orientation="horizontal"
+            android:weightSum="7">
 
-            <!-- Title, secondary and supporting text -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/title"
-                android:textAppearance="?attr/textAppearanceTitleMedium" />
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/Lunes"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_marginRight="10dp"
+                android:layout_weight="1"
+                android:src="@drawable/lunes"
+                app:shapeAppearanceOverlay="@style/circular"
+                app:strokeColor="#2F1500"
+                app:strokeWidth="1dp" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="@string/secondary_text"
-                android:textAppearance="?attr/textAppearanceBodyMedium"
-                android:textColor="?android:attr/textColorSecondary" />
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/Martes"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_marginRight="10dp"
+                android:layout_weight="1"
+                android:src="@drawable/martes"
+                app:shapeAppearanceOverlay="@style/circular"
+                app:strokeColor="#2F1500"
+                app:strokeWidth="1dp" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="@string/supporting_text"
-                android:textAppearance="?attr/textAppearanceBodyMedium"
-                android:textColor="?android:attr/textColorSecondary" />
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/Miercoles"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_marginRight="10dp"
+                android:layout_weight="1"
+                android:src="@drawable/miercoles"
+                app:shapeAppearanceOverlay="@style/circular"
+                app:strokeColor="#2F1500"
+                app:strokeWidth="1dp" />
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/Jueves"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_marginRight="10dp"
+                android:layout_weight="1"
+                android:src="@drawable/jueves"
+                app:shapeAppearanceOverlay="@style/circular"
+                app:strokeColor="#2F1500"
+                app:strokeWidth="1dp" />
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/Viernes"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_marginRight="10dp"
+                android:layout_weight="1"
+                android:src="@drawable/viernes"
+                app:shapeAppearanceOverlay="@style/circular"
+                app:strokeColor="#2F1500"
+                app:strokeWidth="1dp" />
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/Sabado"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_marginRight="10dp"
+                android:layout_weight="1"
+                android:src="@drawable/sabado"
+                app:shapeAppearanceOverlay="@style/circular"
+                app:strokeColor="#2F1500"
+                app:strokeWidth="1dp" />
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/Domingo"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_weight="1"
+                android:src="@drawable/domingo"
+                app:shapeAppearanceOverlay="@style/circular"
+                app:strokeColor="#2F1500"
+                app:strokeWidth="1dp" />
+
+            <!-- Repite este bloque para las imágenes restantes -->
+            <!-- Recuerda cambiar el id de cada ImageView -->
 
         </LinearLayout>
 
-        <!-- Buttons -->
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            android:orientation="horizontal">
+    </FrameLayout>
 
-            <com.google.android.material.button.MaterialButton
-                style="?attr/borderlessButtonStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
-                android:text="string/action_1" />
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardTareasSemanales"
+        android:layout_width="190dp"
+        android:layout_height="195dp"
+        android:layout_marginTop="50dp"
+        android:layout_marginEnd="5dp"
+        app:cardBackgroundColor="#FFCBA4"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="10dp"
+        app:contentPadding="20dp"
+        app:layout_constraintEnd_toStartOf="@id/cardTienda"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/cardTareas"
+        app:layout_constraintBottom_toTopOf="@id/cardLeaderboard">
 
-            <com.google.android.material.button.MaterialButton
-                style="?attr/borderlessButtonStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="string/action_2" />
-        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
 
-    </LinearLayout>
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardTienda"
+        android:layout_width="190dp"
+        android:layout_height="95dp"
+        android:layout_marginTop="50dp"
+        android:layout_marginEnd="10dp"
+        app:cardBackgroundColor="#FFCBA4"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="10dp"
+        app:contentPadding="20dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.963"
+        app:layout_constraintStart_toEndOf="@id/cardTareasSemanales"
+        app:layout_constraintTop_toBottomOf="@id/cardTareas"
+        app:layout_constraintBottom_toTopOf="@id/cardOpciones">
 
+    </com.google.android.material.card.MaterialCardView>
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardInsignia"
+        android:layout_width="90dp"
+        android:layout_height="95dp"
+        android:layout_marginBottom="20dp"
+        app:cardBackgroundColor="#FFCBA4"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="10dp"
+        app:contentPadding="20dp"
+        app:layout_constraintBottom_toTopOf="@+id/cardAnuncio"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.978"
+        app:layout_constraintStart_toEndOf="@+id/cardOpciones"
+        app:layout_constraintTop_toBottomOf="@id/cardTienda">
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardOpciones"
+        android:layout_width="90dp"
+        android:layout_height="95dp"
+        android:layout_marginTop="2dp"
+        android:layout_marginBottom="20dp"
+        app:cardBackgroundColor="#FFCBA4"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="10dp"
+        app:contentPadding="20dp"
+        app:layout_constraintBottom_toTopOf="@id/cardAnuncio"
+        app:layout_constraintEnd_toStartOf="@id/cardInsignia"
+        app:layout_constraintStart_toEndOf="@id/cardTareasSemanales"
+        app:layout_constraintTop_toBottomOf="@id/cardTienda">
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardLeaderboard"
+        android:layout_width="90dp"
+        android:layout_height="190dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="40dp"
+        app:cardBackgroundColor="#FFCBA4"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="10dp"
+        app:contentPadding="20dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/cardAnuncio"
+        app:layout_constraintHorizontal_bias="0.663"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/cardTareasSemanales">
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardAnuncio"
+        android:layout_width="290dp"
+        android:layout_height="190dp"
+        android:layout_marginTop="28dp"
+        android:layout_marginBottom="40dp"
+        app:cardBackgroundColor="#FFCBA4"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="10dp"
+        app:contentPadding="20dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.529"
+        app:layout_constraintStart_toEndOf="@id/cardLeaderboard"
+        app:layout_constraintTop_toBottomOf="@id/cardTareasSemanales">
+
+    </com.google.android.material.card.MaterialCardView>
 </androidx.constraintlayout.widget.ConstraintLayout>
