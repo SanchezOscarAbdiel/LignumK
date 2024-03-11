@@ -25,16 +25,24 @@ import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import android.view.LayoutInflater
+import android.widget.ImageView
+import androidx.core.view.isVisible
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.GenerateContentResponse
 import com.google.ai.client.generativeai.type.content
+import com.google.android.material.progressindicator.CircularProgressIndicator
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import org.json.JSONObject
 
 import java.io.FileNotFoundException
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
 
 val cFirebaseA = ConexionFirebase()
-
+val cPrimeraVez = PrimeraVez()
+val cMenuPrincipal = MenuPrincipal()
 
 class Actividades{
 
@@ -45,17 +53,16 @@ class Actividades{
         return JSONArray(contenido)
     }
 
-    suspend fun samAItexto(titulo: String, descripcion: String, respuesta: String,puntos:String): String? {
+    suspend fun samAItexto(contexto: Context,titulo: String, descripcion: String, respuesta: String,puntos:String) {
         val generativeModel = GenerativeModel(
-            // Use a model that's applicable for your use case (see "Implement basic use cases" below)
             modelName = "gemini-pro",
-            // Access your API key as a Build Configuration variable (see "Set up your API key" above)
             apiKey = "AIzaSyDo5BH4jyyrGS28OIpMTdpTL-Zx3oVGKbI"
         )
 
-        val Prompt = "A un trabajador de una empresa madedera se le asignó una actividad que lleva por titulo: '${titulo}' teniendo que hacer lo siguiente:'${descripcion}'. esta fue su respuesta: '${respuesta}'. puntua su respuesta con un rango de 0 a '${puntos}' (escribe asi: -x/${puntos}-) y escribe un comentario corto"
+        val Prompt = "A un trabajador de una empresa madedera se le asignó una actividad que lleva por titulo: '${titulo}' teniendo que hacer lo siguiente:'${descripcion}'. esta fue su respuesta: '${respuesta}'. puntua su respuesta con un rango de 0 a '${puntos}' (escribe asi: -x/${puntos}-) y escribe retroalimentacion corta acerca del tema"
         val response = generativeModel.generateContent(Prompt)
-        return response.text
+
+        response.text?.let { popRetroalimentacion(contexto, it, titulo) }
     }
 
     suspend fun samAIimagen(contexto: Context, titulo: String){
@@ -84,8 +91,7 @@ class Actividades{
 
             val response = generativeModel.generateContent(inputContent)
             response.text?.let {
-                popRetroalimentacion(contexto, it, titulo){ number ->
-                }
+                popRetroalimentacion(contexto, it, titulo)
             }
         }
 
@@ -123,7 +129,7 @@ class Actividades{
             }, 5000)
         }
     }
-    fun popEscritura(contexto: Context, titulo: String, descripcion: String, callback: (String) -> Unit){
+    fun popEscritura(contexto: Context, titulo: String, descripcion: String, puntos: String){
         val editText = EditText(contexto)
         val dialog =MaterialAlertDialogBuilder(contexto)
             .setTitle(titulo)
@@ -134,7 +140,10 @@ class Actividades{
             }
             .setPositiveButton("Aceptar") { dialog, which ->
                 val inputText = editText.text.toString()
-                callback(inputText)
+
+                CoroutineScope(Dispatchers.Main).launch {
+                    samAItexto(contexto,titulo, descripcion, inputText, puntos)
+                }
             }
             .show()
 
@@ -156,11 +165,11 @@ class Actividades{
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false
     }
 
-    fun popRetroalimentacion(contexto: Context,result: String, titulo: String, callback: (String) -> Unit) {
+    fun popRetroalimentacion(contexto: Context,result: String, titulo: String) {
         val dialog =MaterialAlertDialogBuilder(contexto)
             .setTitle(titulo)
             .setMessage(result)
-            .setPositiveButton("Aceptar") { dialog, which ->
+            .setPositiveButton("Reclamar puntos") { dialog, which ->
                 //Marcar como completada la actividad
                 val regex = Regex("-\\d+/\\d+-")
                 val matchResult = regex.find(result)
@@ -169,10 +178,50 @@ class Actividades{
 // Ahora, score es "-10/15-", puedes procesarlo más para obtener solo el número
                 val number = score?.substring(1, score.indexOf("/"))  // Esto debería dar "10"
                 if (number != null)
-                    callback(number)
-
+                    actualizaActividad(contexto,number)
             }
             .show()
+    }
+
+    fun actualizaActividad(contexto: Context,puntos: String){
+        val IvCargaCircular = (contexto as MenuPrincipal).findViewById<CircularProgressIndicator>(R.id.CargaCircular)
+        IvCargaCircular.isVisible = true
+        val sharedPref = contexto.getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
+        var uid = sharedPref.getString("UID", "")
+
+        val json = actividadesMP.leeArchivo(contexto,"Usuarios")
+        var objetoBuscado: JSONObject? = null
+        var monedas = 0
+
+        for (i in 0 until json.length()) {
+            val objeto = json.getJSONObject(i)
+            if (objeto.getString("UID") == uid) {
+                objetoBuscado = objeto
+                break
+            }
+        }
+        if (objetoBuscado != null) {
+            Log.d("Objeto","Entra a objeto buscado")
+            monedas = objetoBuscado.getInt("monedas") + puntos.toInt()
+        } else {
+            Log.d("MiApp", "No se encontró el usuario")
+        }
+
+
+        val jsonObject = JSONObject()
+        jsonObject.put("coleccion", "Usuarios")
+        jsonObject.put("documento", uid)
+        jsonObject.put("monedas",monedas)
+
+        val jsonDatos = jsonObject.toString()
+
+        cFirebaseA.UpdateData(jsonDatos)
+
+        cFirebaseA.LeerDatos("Usuarios","Puesto","Empleado",contexto)
+
+        if (uid != null)
+            cMenuPrincipal.aux(contexto,uid)
+
     }
 
     fun popImagen(contexto: Context, titulo: String, descripcion: String){
@@ -229,7 +278,7 @@ class Actividades{
         val delay = TimeUnit.HOURS.toMillis(((0 + desiredHour - currentTime) % 24).toLong()) +
                 TimeUnit.MINUTES.toMillis((desiredMinute - Calendar.getInstance().get(Calendar.MINUTE)).toLong())
 
-        Log.d("SincronizaTareas", "El delay es: $delay")
+
         return delay
     }
 

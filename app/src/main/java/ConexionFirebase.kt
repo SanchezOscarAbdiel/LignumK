@@ -72,6 +72,34 @@ class ConexionFirebase {
         }
     }
 
+    fun UpdateData(jsonData: String) {
+        try {
+            // Parsear el JSON para obtener la colección, el documento y los campos
+            val jsonObject = JSONObject(jsonData)
+            val coleccion = jsonObject.getString("coleccion") ?: throw Exception("Colección no especificada")
+            val documento = jsonObject.getString("documento") ?: throw Exception("Documento no especificado")
+            val campos = HashMap<String, Any>()
+            for (key in jsonObject.keys()) {
+                if (key != "coleccion" && key != "documento") {
+                    campos[key] = jsonObject.get(key)
+                }
+            }
+            // Crear una referencia al documento
+            val documentReference = db.collection(coleccion).document(documento)
+
+            // Actualizar los campos del documento
+            documentReference.update(campos)
+                .addOnSuccessListener {
+                    Log.d(TAG, "Documento actualizado con éxito")
+                }
+                .addOnFailureListener { e ->
+                    Log.w(TAG, "Error al actualizar el documento", e)
+                }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error al procesar el JSON", e)
+        }
+    }
+
 
     fun DeleteData(coleccion: String, documento: String, campos: List<String>) {
         val docRef = db.collection(coleccion).document(documento)

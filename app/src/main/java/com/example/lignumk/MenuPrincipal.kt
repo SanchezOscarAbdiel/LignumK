@@ -45,10 +45,14 @@ import java.util.concurrent.Executors
 import android.app.AlertDialog
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isVisible
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+import com.google.android.material.progressindicator.CircularProgressIndicator
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 
 
 val cFirebase = ConexionFirebase()
@@ -65,6 +69,8 @@ class MenuPrincipal : ComponentActivity() {
     lateinit var fotoPerfil: ImageView
     lateinit var progreso: ProgressBar
     lateinit var layoutTarea: RelativeLayout
+    lateinit var tvNotificacion: TextView
+    lateinit var btnEnviar: ExtendedFloatingActionButton
 
     //DiasSemana
     lateinit var IvLunes: ImageView
@@ -83,6 +89,11 @@ class MenuPrincipal : ComponentActivity() {
     private lateinit var auth: FirebaseAuth
     val contsto = this
 
+    override fun onResume() {
+        super.onResume()
+        Log.d("Resume ", "Entra a OnResume")
+        cardUsuario(this)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -98,6 +109,8 @@ class MenuPrincipal : ComponentActivity() {
         fotoPerfil = findViewById(R.id.fotoPerfil)
         progreso = findViewById(R.id.progressBar)
         layoutTarea = findViewById(R.id.layoutTarea)
+        tvNotificacion = findViewById(R.id.cTVnoti)
+        btnEnviar = findViewById(R.id.btnEnviarActividad)
 
         IvLunes = findViewById(R.id.Lunes)
         IvMartes = findViewById(R.id.Martes)
@@ -120,27 +133,39 @@ class MenuPrincipal : ComponentActivity() {
         val sharedPref = getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
         var firtRun = sharedPref.getBoolean("first_run", true)
         if (!firtRun)
-            cardUsuario()
+            cardUsuario(this)
 
     }
 
-    fun cardUsuario(){
-        val sharedPref = getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
+    fun cardUsuario(context: Context){
+        Log.d("hola","hola papus")
+        val sharedPref = context.getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
         var nombre = sharedPref.getString("UserName", "")
         var uid = sharedPref.getString("UID", "")
         var foto = sharedPref.getString("fotoPerfil","")
         var tipo = sharedPref.getString("tipoFoto","")
         if (nombre != null) nombre = nombre.split(" ")[0]
 
-        nombreUsuario.text = "${nombreUsuario.text} $nombre"
-
-        Log.d("cardUsuario","Entrando a card \nnombre: $nombre \nfoto: $foto, \ntipo: $tipo")
+        nombreUsuario.text = "\t BIENVENIDO $nombre"
 
         cFirebase.LeerDatos("Usuarios","Puesto","Empleado",this)
         try{
-            val json = actividadesMP.leeArchivo(this,"Usuarios")
-            val jsonO = json.getJSONObject(0)
-            tvMonedas.text = "${tvMonedas.text} ${jsonO.getInt("monedas").toString()}"
+            val jsonArray = actividadesMP.leeArchivo(this,"Usuarios")
+            var objetoBuscado: JSONObject? = null
+
+            for (i in 0 until jsonArray.length()) {
+                val objeto = jsonArray.getJSONObject(i)
+                if (objeto.getString("UID") == uid) {
+                    objetoBuscado = objeto
+                    break
+                }
+            }
+
+            if (objetoBuscado != null) {
+                tvMonedas.text = "$ ${objetoBuscado.getInt("monedas").toString()}"
+            } else {
+                Log.d("MiApp", "No se encontró el usuario")
+            }
 
             if (tipo == "uri"){
                 if (foto != null) {
@@ -189,7 +214,7 @@ class MenuPrincipal : ComponentActivity() {
 
         //-------------
         val diaDeLaSemana = LocalDate.now().dayOfWeek.value
-        Log.d("SEMANA", "Dia de la semana $diaDeLaSemana")
+
         progreso.progress = diaDeLaSemana-1
 
         // Define un arreglo con todas tus ImageViews
@@ -213,26 +238,69 @@ class MenuPrincipal : ComponentActivity() {
     fun prueba(view: View){
         val sharedPref = this.getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
         val subtipo = sharedPref.getString("subtipo","")
+        val puntos = sharedPref.getString("puntos","")
 
         var result =""
+        Log.d("Subtipo", "Subtipo de actividad: $subtipo")
         when (subtipo) {
-            "escritura" -> actividadesMP.popEscritura(this,tvTit.text.toString(),tvDescripcion.text.toString()){ inputText ->
-                CoroutineScope(Dispatchers.Main).launch {
-                    result = actividadesMP.samAItexto(tvTit.toString(),tvDescripcion.text.toString(),inputText,"15").toString()
-                }
-            }
+            "escritura" -> actividadesMP.popEscritura(contsto,tvTit.text.toString(), tvDescripcion.text.toString(),puntos.toString())
             "foto" -> actividadesMP.popImagen(this,tvTit.text.toString(), tvDescripcion.text.toString())
             else -> Log.d("MiWorker", "Parámetro inválido")
         }
 
-
-        actividadesMP.popRetroalimentacion(contsto,tvTit.text.toString(),result) { number ->
-        }
     }
 
+    fun aux(context: Context,uid: String){
+        val tvMonedas = (context as MenuPrincipal).findViewById<TextView>(R.id.tvMonedas)
+        val tvNotificacion = (context as MenuPrincipal).findViewById<TextView>(R.id.cTVnoti)
+        val btnEnviar = (context as MenuPrincipal).findViewById<TextView>(R.id.btnEnviarActividad)
+        val IvCargaCircular = (context as MenuPrincipal).findViewById<CircularProgressIndicator>(R.id.CargaCircular)
+        val layout = (context as MenuPrincipal).findViewById<RelativeLayout>(R.id.layoutTarea)
 
-//actividadesMP.popImagen(this,tvTit.text.toString(),tvDescripcion.text.toString())
+        val IvLunes = (context as MenuPrincipal).findViewById<ImageView>(R.id.Lunes)
+        val IvMartes = (context as MenuPrincipal).findViewById<ImageView>(R.id.Martes)
+        val IvMiercoles = (context as MenuPrincipal).findViewById<ImageView>(R.id.Miercoles)
+        val IvJueves = (context as MenuPrincipal).findViewById<ImageView>(R.id.Jueves)
+        val IvViernes = (context as MenuPrincipal).findViewById<ImageView>(R.id.Viernes)
+        val IvSabado = (context as MenuPrincipal).findViewById<ImageView>(R.id.Sabado)
+        val IvDomingo = (context as MenuPrincipal).findViewById<ImageView>(R.id.Domingo)
 
+        Handler(Looper.getMainLooper()).postDelayed({
+            val jsonArray = actividadesMP.leeArchivo(context,"Usuarios")
+            var objetoBuscado: JSONObject? = null
+
+            for (i in 0 until jsonArray.length()) {
+                val objeto = jsonArray.getJSONObject(i)
+                if (objeto.getString("UID") == uid) {
+                    objetoBuscado = objeto
+                    break
+                }
+            }
+            if (objetoBuscado != null) {
+                Log.d("Objeto","Entra a objeto buscado")
+                tvMonedas.text = "$ ${objetoBuscado.getInt("monedas").toString()}"
+            } else {
+                Log.d("MiApp", "No se encontró el usuario")
+            }
+        }, 5000)
+
+    tvNotificacion.text = "Actividad realizada!"
+        btnEnviar.isEnabled = false
+
+        val diaDeLaSemana = LocalDate.now().dayOfWeek.value
+        val imageViews = arrayOf(IvLunes, IvMartes, IvMiercoles, IvJueves, IvViernes, IvSabado, IvDomingo)
+        val drawables = arrayOf(R.drawable.lunesbien, R.drawable.martesbien, R.drawable.miercolesbien, R.drawable.juevesbien, R.drawable.viernesbien, R.drawable.sabadobien, R.drawable.domingobien)
+        imageViews[diaDeLaSemana-1].setImageResource(drawables[diaDeLaSemana-1])
+
+        IvCargaCircular.isVisible = false
+        layout.isVisible = false
+
+        val sharedPref = context.getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
+        val editor = sharedPref.edit()
+        editor.putString("actNotificacion", "Actividad Realizada!")
+        editor.putBoolean("actBotonEnviar", false)
+        editor.apply()
+    }
 
     @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     override fun onStart() {
@@ -259,14 +327,16 @@ class MenuPrincipal : ComponentActivity() {
         lastOpenDay.set(Calendar.MINUTE, 0)
         lastOpenDay.set(Calendar.SECOND, 0)
         lastOpenDay.set(Calendar.MILLISECOND, 0)
-        Log.d("MiWorker", "Last: ${lastOpenDay}, current: $currentDay")
+
         // Compara las fechas
         val sharedPref = getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
         val FIRST_RUN = "first_run"
         val firstRun = sharedPref.getBoolean(FIRST_RUN, true)
-        Log.d("MiWorker", "First run $firstRun")
+
         if (currentDay != lastOpenDay && firstRun == false) {
             actMenu.AsignarTareas(this)
+            tvNotificacion.text = "Tienes una nueva asignacion!"
+            btnEnviar.isEnabled = true
             prefs.edit().putLong(LAST_OPEN_DATE, currentDate).apply()
         }
 
@@ -274,13 +344,10 @@ class MenuPrincipal : ComponentActivity() {
         // Recuperar el texto de la variable elemento usando la misma clave
         val descripcion = sharedPref.getString("descripcion", "")
         val titulo = sharedPref.getString("titulo", "")
-        val nRandom = sharedPref.getString("Nrandom", "")
-        // Asignar el texto al editText Nrandom
 
-        Log.d("MiWorker", "Shared preferences OnStart: \n${descripcion}, ${titulo}, ${nRandom}")
         tvDescripcion.text = descripcion
         tvTit.text = titulo
-        //tvRand.text = nRandom
+
     }
 
     fun VerificaPrimeraVez(){

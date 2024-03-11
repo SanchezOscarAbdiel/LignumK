@@ -160,7 +160,7 @@ val actividades = Actividades()
 // Agregar las propiedades del mapa al objeto JSON
             jsonObject.put("coleccion", "Usuarios")
             jsonObject.put("documento", Puid)
-            jsonObject.put("Fperfil", Pimg)
+            jsonObject.put("UID", Puid)
             jsonObject.put("Notificaciones", cbCorreo.isChecked)
             jsonObject.put("Puesto", Pspinner)
             jsonObject.put("Ddescanso", chipsSeleccionados)
@@ -170,7 +170,7 @@ val actividades = Actividades()
             val jsonDatos = jsonObject.toString()
 
 // Imprimir el JSON (puedes guardarlo en un archivo o enviarlo a un servidor)
-            Log.d("Datos en JSON", jsonDatos)
+
             cFirebase.PostData(jsonDatos)
 
             val sharedPref = this.getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
@@ -194,7 +194,6 @@ val actividades = Actividades()
 
         for (id in chipsSeleccionados) {
             val chip = findViewById<Chip>(id)
-            Log.d("ChipGroup", "Chip seleccionado: ${chip.text}")
         }
     }
 
@@ -239,15 +238,9 @@ val actividades = Actividades()
         if(result.resultCode == RESULT_OK){
             val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
             manageResule(task)
-            Log.d("Google", "No error: ${result.resultCode}")
-            Log.d("Google", "No error: ${result.data}")
-            Toast.makeText(this,"Si Autenticado, ${result.resultCode}", Toast.LENGTH_SHORT).show()
-            Toast.makeText(this,"Si Autenticado, ${result.data}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this,"Autenticado Exitosamente", Toast.LENGTH_SHORT).show()
         }else{
-            Log.d("Google", "Error: ${result.resultCode}")
-            Log.d("Google", "Error: ${result.data}")
-            Toast.makeText(this,"No Autenticado, ${result.resultCode}", Toast.LENGTH_SHORT).show()
-            Toast.makeText(this,"No Autenticado, ${result.data}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this,"No Autenticado, codigo de error: ${result.resultCode}", Toast.LENGTH_SHORT).show()
         }
     }
 
