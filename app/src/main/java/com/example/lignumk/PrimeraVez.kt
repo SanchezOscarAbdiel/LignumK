@@ -62,10 +62,11 @@ import androidx.core.view.isVisible
 import coil.compose.ImagePainter
 import coil.compose.rememberImagePainter
 import com.bumptech.glide.Glide
+import com.google.gson.Gson
 
 
 class PrimeraVez : AppCompatActivity() {
-val actividades = Actividades()
+    val actividades = Actividades()
 
     lateinit var BtnGoogle: Button
     lateinit var SpnPuesto: Spinner
@@ -77,10 +78,8 @@ val actividades = Actividades()
     var esAut = false
     var esSpn = false
     var Puid = ""
-    lateinit var Pimg:ByteArray
+    lateinit var Pimg: ByteArray
     lateinit var Pspinner: String
-
-
 
     private lateinit var googleSignInClient: GoogleSignInClient
     private lateinit var auth: FirebaseAuth
@@ -91,7 +90,6 @@ val actividades = Actividades()
         super.onCreate(savedInstanceState)
         binding = ActivityPrimeraVezBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        //setContentView(R.layout.activity_primera_vez)
         BtnGoogle = findViewById(R.id.SingingGoogle)
         auth = Firebase.auth
         SpnPuesto = findViewById(R.id.SpnPuestos)
@@ -104,19 +102,18 @@ val actividades = Actividades()
         Glide.with(this).load(R.drawable.cargando).into(gifCarga)
         gifCarga.visibility = View.GONE
 
-        pickMedia = registerForActivityResult(ActivityResultContracts.PickVisualMedia()){
-                uri ->
-            if (uri!= null){
+        pickMedia = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+            if (uri != null) {
                 imgBtn.setImageURI(uri)
                 val inputStream = contentResolver.openInputStream(uri)
                 Pimg = inputStream?.readBytes()!!
                 val sharedPref = this.getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
                 val editor = sharedPref.edit()
                 editor.putString("fotoPerfil", uri.toString())
-                editor.putString("tipoFoto","uri")
+                editor.putString("tipoFoto", "uri")
                 editor.apply()
 
-            }else{
+            } else {
 
             }
         }
@@ -125,7 +122,7 @@ val actividades = Actividades()
             .requestIdToken(getString(R.string.default_web_client_id))
             .requestEmail()
             .build()
-        googleSignInClient = GoogleSignIn.getClient(this,gso)
+        googleSignInClient = GoogleSignIn.getClient(this, gso)
 
         //DescargaArchivos
         cFirebase.LeerDatos("Tareas", "tipo", "diaria", this)
@@ -139,13 +136,13 @@ val actividades = Actividades()
     }
 
 
-    fun seleccionaImagen(view: View){
+    fun seleccionaImagen(view: View) {
 
         pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
 
     }
 
-    fun continuar(view: View){
+    fun continuar(view: View) {
 
         gifCarga.visibility = View.VISIBLE
         val chipsSeleccionados = chGrop.checkedChipIds.map { id ->
@@ -153,7 +150,7 @@ val actividades = Actividades()
             chip.text.toString()
         }
 
-        if(chipsSeleccionados.isNotEmpty() && esAut && esSpn){
+        if (chipsSeleccionados.isNotEmpty() && esAut && esSpn) {
 
             val jsonObject = JSONObject()
 
@@ -164,7 +161,7 @@ val actividades = Actividades()
             jsonObject.put("Notificaciones", cbCorreo.isChecked)
             jsonObject.put("Puesto", Pspinner)
             jsonObject.put("Ddescanso", chipsSeleccionados)
-            jsonObject.put("monedas",0)
+            jsonObject.put("monedas", 0)
 
 // Convertir el objeto JSON a una cadena JSON
             val jsonDatos = jsonObject.toString()
@@ -173,9 +170,16 @@ val actividades = Actividades()
 
             cFirebase.PostData(jsonDatos)
 
+            //Habilita drawables dia de la semana
+            val diasSemana: Map<String, String> =
+                mapOf("IvLunes" to "lunes", "IvMartes" to "martes", "IvMiercoles" to "miercoles",
+                    "IvJueves" to "jueves","IvViernes" to "viernes","IvSabado" to "sabado",
+                    "IvDomingo" to "domingo")
+            val jsonString = Gson().toJson(diasSemana)
             val sharedPref = this.getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
             val editor = sharedPref.edit()
             editor.putString("UID", Puid)
+            editor.putString("diasSemana", jsonString)
             editor.apply()
 
             Thread.sleep(5000)
@@ -183,13 +187,13 @@ val actividades = Actividades()
             val intent = Intent(this, MenuPrincipal::class.java)
             startActivity(intent)
 
-        }else{
-            Toast.makeText(this,"Selecciona todos los campos.", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(this, "Selecciona todos los campos.", Toast.LENGTH_SHORT).show()
             gifCarga.visibility = View.GONE
         }
     }
 
-    fun SelectedChip(view: View){
+    fun SelectedChip(view: View) {
         val chipsSeleccionados = chGrop.checkedChipIds // Obtiene los IDs de los Chips seleccionados
 
         for (id in chipsSeleccionados) {
@@ -200,10 +204,14 @@ val actividades = Actividades()
     fun rellenaSpin() {
 
 // Crear un adaptador para el spinner con el array de recursos
-        val adapter = ArrayAdapter.createFromResource(this, R.array.combo_puestos, android.R.layout.simple_spinner_item)
+        val adapter = ArrayAdapter.createFromResource(
+            this,
+            R.array.combo_puestos,
+            android.R.layout.simple_spinner_item
+        )
         SpnPuesto.adapter = adapter
 
-        SpnPuesto.onItemSelectedListener = object: AdapterView.OnItemSelectedListener{
+        SpnPuesto.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(
                 parent: AdapterView<*>?,
                 view: View?,
@@ -213,7 +221,8 @@ val actividades = Actividades()
                 val item = adapter.getItem(position)
 
                 Pspinner = item.toString()
-                Toast.makeText(this@PrimeraVez, "Item seleccionado: $Pspinner", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@PrimeraVez, "Item seleccionado: $Pspinner", Toast.LENGTH_SHORT)
+                    .show()
                 if (position != 0) esSpn = true
             }
 
@@ -225,7 +234,7 @@ val actividades = Actividades()
     }
 
 
-    fun SingingGoogle(view: View){
+    fun SingingGoogle(view: View) {
         val signIntent = googleSignInClient.signInIntent
         launcher.launch(signIntent)
 
@@ -233,21 +242,24 @@ val actividades = Actividades()
 
     private val launcher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
-    ){
-        result->
-        if(result.resultCode == RESULT_OK){
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
             val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
             manageResule(task)
-            Toast.makeText(this,"Autenticado Exitosamente", Toast.LENGTH_SHORT).show()
-        }else{
-            Toast.makeText(this,"No Autenticado, codigo de error: ${result.resultCode}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Autenticado Exitosamente", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(
+                this,
+                "No Autenticado, codigo de error: ${result.resultCode}",
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 
     private fun manageResule(task: Task<GoogleSignInAccount>) {
-        if (task.isSuccessful){
-            val account:GoogleSignInAccount? = task.result
-            if (account!=null){
+        if (task.isSuccessful) {
+            val account: GoogleSignInAccount? = task.result
+            if (account != null) {
                 updateUi(account)
             }
         }
@@ -257,17 +269,17 @@ val actividades = Actividades()
         val credential = GoogleAuthProvider.getCredential(account.idToken, null)
         auth.signInWithCredential(credential).addOnCompleteListener {
 
-            if (it.isSuccessful){
-                Toast.makeText(this,"Autenticado", Toast.LENGTH_SHORT).show()
+            if (it.isSuccessful) {
+                Toast.makeText(this, "Autenticado", Toast.LENGTH_SHORT).show()
                 verifyUser()
-            }else{
-                Toast.makeText(this,"?????????", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "?????????", Toast.LENGTH_SHORT).show()
             }
 
         }
     }
 
-    private fun verifyUser(){
+    private fun verifyUser() {
         val user = Firebase.auth.currentUser
         user?.let {
             val name = it.displayName
@@ -278,22 +290,22 @@ val actividades = Actividades()
 
             //Pase de parametros
 
-            if(emailVerified) {
+            if (emailVerified) {
                 Toast.makeText(this, "Correo Autenticado", Toast.LENGTH_SHORT).show()
                 esAut = true
             }
 
-            var image:Bitmap? = null
+            var image: Bitmap? = null
             val imageurl = photoURL.toString()
             val executorService = Executors.newSingleThreadExecutor()
-            executorService.execute{
+            executorService.execute {
                 try {
                     val `in` = java.net.URL(imageurl).openStream()
                     image = BitmapFactory.decodeStream(`in`)
-                }catch (e:Exception){
-                    Toast.makeText(this,"Error", Toast.LENGTH_SHORT).show()
+                } catch (e: Exception) {
+                    Toast.makeText(this, "Error", Toast.LENGTH_SHORT).show()
                 }
-                runOnUiThread{
+                runOnUiThread {
                     try {
                         Thread.sleep(1000)
                         //Imagen placed
@@ -302,8 +314,8 @@ val actividades = Actividades()
                         val sharedPref = this.getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
                         val editor = sharedPref.edit()
                         editor.putString("fotoPerfil", image.toString())
-                        editor.putString("UserName",name)
-                        editor.putString("tipoFoto","bitmap")
+                        editor.putString("UserName", name)
+                        editor.putString("tipoFoto", "bitmap")
                         editor.apply()
 
                         // Supongamos que tienes un Bitmap llamado "image"
@@ -312,9 +324,8 @@ val actividades = Actividades()
                         Pimg = stream.toByteArray()
 
 
-
-                    }catch (e:InterruptedException){
-                        Toast.makeText(this,"Error", Toast.LENGTH_SHORT).show()
+                    } catch (e: InterruptedException) {
+                        Toast.makeText(this, "Error", Toast.LENGTH_SHORT).show()
                     }
                 }
             }
@@ -324,19 +335,7 @@ val actividades = Actividades()
     override fun onStart() {
         super.onStart()
         val currentUser = auth.currentUser
-        if (currentUser!=null) verifyUser()
+        if (currentUser != null) verifyUser()
     }
 
 }
-
-/*
-* Hacer consultas de tareas
-* (Dos veces por si tiene que descargar el archivo)
-* Calcular workmanager para 7 am
-* Rellenar datos
-*   Guardar dia actual
-*   Dia de descanso
-*   Datos personales
-*
-* Iniciar sesion con google
-* */

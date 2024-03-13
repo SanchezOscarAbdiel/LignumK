@@ -173,18 +173,18 @@
             android:weightSum="7">
 
             <com.google.android.material.imageview.ShapeableImageView
-                android:id="@+id/Lunes"
+                android:id="@+id/IvLunes"
                 android:layout_width="0dp"
                 android:layout_height="50dp"
                 android:layout_marginRight="10dp"
                 android:layout_weight="1"
-                android:src="@drawable/lunes"
+                android:src="@drawable/cargando"
                 app:shapeAppearanceOverlay="@style/circular"
                 app:strokeColor="#2F1500"
                 app:strokeWidth="1dp" />
 
             <com.google.android.material.imageview.ShapeableImageView
-                android:id="@+id/Martes"
+                android:id="@+id/IvMartes"
                 android:layout_width="0dp"
                 android:layout_height="50dp"
                 android:layout_marginRight="10dp"
@@ -195,7 +195,7 @@
                 app:strokeWidth="1dp" />
 
             <com.google.android.material.imageview.ShapeableImageView
-                android:id="@+id/Miercoles"
+                android:id="@+id/IvMiercoles"
                 android:layout_width="0dp"
                 android:layout_height="50dp"
                 android:layout_marginRight="10dp"
@@ -206,7 +206,7 @@
                 app:strokeWidth="1dp" />
 
             <com.google.android.material.imageview.ShapeableImageView
-                android:id="@+id/Jueves"
+                android:id="@+id/IvJueves"
                 android:layout_width="0dp"
                 android:layout_height="50dp"
                 android:layout_marginRight="10dp"
@@ -217,7 +217,7 @@
                 app:strokeWidth="1dp" />
 
             <com.google.android.material.imageview.ShapeableImageView
-                android:id="@+id/Viernes"
+                android:id="@+id/IvViernes"
                 android:layout_width="0dp"
                 android:layout_height="50dp"
                 android:layout_marginRight="10dp"
@@ -228,7 +228,7 @@
                 app:strokeWidth="1dp" />
 
             <com.google.android.material.imageview.ShapeableImageView
-                android:id="@+id/Sabado"
+                android:id="@+id/IvSabado"
                 android:layout_width="0dp"
                 android:layout_height="50dp"
                 android:layout_marginRight="10dp"
@@ -239,7 +239,7 @@
                 app:strokeWidth="1dp" />
 
             <com.google.android.material.imageview.ShapeableImageView
-                android:id="@+id/Domingo"
+                android:id="@+id/IvDomingo"
                 android:layout_width="0dp"
                 android:layout_height="50dp"
                 android:layout_weight="1"

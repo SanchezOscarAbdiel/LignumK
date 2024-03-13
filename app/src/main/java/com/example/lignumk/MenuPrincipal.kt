@@ -44,11 +44,16 @@ import java.util.Calendar
 import java.util.concurrent.Executors
 import android.app.AlertDialog
 import android.net.Uri
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 import com.google.android.material.progressindicator.CircularProgressIndicator
+import com.google.common.reflect.TypeToken
+import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -86,6 +91,7 @@ class MenuPrincipal : ComponentActivity() {
     private val LAST_OPEN_DATE = "lastOpenDate"
 
     private lateinit var googleSignInClient: GoogleSignInClient
+    private lateinit var pickMedia: ActivityResultLauncher<PickVisualMediaRequest>
     private lateinit var auth: FirebaseAuth
     val contsto = this
 
@@ -97,6 +103,32 @@ class MenuPrincipal : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        pickMedia = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+            if (uri != null) {
+                val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                        Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+
+                // Comprueba la versión de Android
+                try {
+                    // Solicita el permiso persistente
+                    applicationContext.contentResolver.takePersistableUriPermission(uri, takeFlags)
+                } catch (e: SecurityException) {
+                    e.printStackTrace()
+                }
+
+                val sharedPref = this.getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
+                val editor = sharedPref.edit()
+                editor.putString("fotoTarea", uri.toString())
+                editor.apply()
+
+                val puntos = sharedPref.getString("puntos","")
+                actividadesMP.popImagen(this,tvTit.text.toString(), tvDescripcion.text.toString(),puntos.toString())//
+            } else {
+
+            }
+        }
+
 
         workManager = WorkManager.getInstance(applicationContext)
         setContentView(R.layout.activity_menu_principal)
@@ -112,13 +144,13 @@ class MenuPrincipal : ComponentActivity() {
         tvNotificacion = findViewById(R.id.cTVnoti)
         btnEnviar = findViewById(R.id.btnEnviarActividad)
 
-        IvLunes = findViewById(R.id.Lunes)
-        IvMartes = findViewById(R.id.Martes)
-        IvMiercoles = findViewById(R.id.Miercoles)
-        IvJueves = findViewById(R.id.Jueves)
-        IvViernes = findViewById(R.id.Viernes)
-        IvSabado = findViewById(R.id.Sabado)
-        IvDomingo = findViewById(R.id.Domingo)
+        IvLunes = findViewById(R.id.IvLunes)
+        IvMartes = findViewById(R.id.IvMartes)
+        IvMiercoles = findViewById(R.id.IvMiercoles)
+        IvJueves = findViewById(R.id.IvJueves)
+        IvViernes = findViewById(R.id.IvViernes)
+        IvSabado = findViewById(R.id.IvSabado)
+        IvDomingo = findViewById(R.id.IvDomingo)
 
         VerificaPrimeraVez()
 
@@ -138,17 +170,30 @@ class MenuPrincipal : ComponentActivity() {
     }
 
     fun cardUsuario(context: Context){
-        Log.d("hola","hola papus")
+
         val sharedPref = context.getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
         var nombre = sharedPref.getString("UserName", "")
-        var uid = sharedPref.getString("UID", "")
-        var foto = sharedPref.getString("fotoPerfil","")
-        var tipo = sharedPref.getString("tipoFoto","")
+        val uid = sharedPref.getString("UID", "")
+        val foto = sharedPref.getString("fotoPerfil","")
+        val tipo = sharedPref.getString("tipoFoto","")
+        val diasSemana = sharedPref.getString("diasSemana","")
+
+        // Aquí recuperamos el Map de las SharedPreferences y asignamos los drawables a los ImageViews
+        val jsonString = sharedPref.getString("diasSemana", "")
+        val type = object : TypeToken<Map<String, String>>() {}.type
+        val recuperadoMap: Map<String, String> = Gson().fromJson(jsonString, type)
+
+        val dias = listOf("IvLunes", "IvMartes", "IvMiercoles", "IvJueves", "IvViernes", "IvSabado", "IvDomingo")
+
+        for (dia in dias) {
+            val imageView: ImageView = findViewById(resources.getIdentifier(dia, "id", packageName))
+            imageView.setImageResource(resources.getIdentifier(recuperadoMap[dia], "drawable", packageName))
+        }
+
         if (nombre != null) nombre = nombre.split(" ")[0]
-
         nombreUsuario.text = "\t BIENVENIDO $nombre"
-
         cFirebase.LeerDatos("Usuarios","Puesto","Empleado",this)
+
         try{
             val jsonArray = actividadesMP.leeArchivo(this,"Usuarios")
             var objetoBuscado: JSONObject? = null
@@ -162,7 +207,7 @@ class MenuPrincipal : ComponentActivity() {
             }
 
             if (objetoBuscado != null) {
-                tvMonedas.text = "$ ${objetoBuscado.getInt("monedas").toString()}"
+                tvMonedas.text = "$ ${objetoBuscado.getInt("monedas")}"
             } else {
                 Log.d("MiApp", "No se encontró el usuario")
             }
@@ -214,17 +259,7 @@ class MenuPrincipal : ComponentActivity() {
 
         //-------------
         val diaDeLaSemana = LocalDate.now().dayOfWeek.value
-
         progreso.progress = diaDeLaSemana-1
-
-        // Define un arreglo con todas tus ImageViews
-        val imageViews = arrayOf(IvLunes, IvMartes, IvMiercoles, IvJueves, IvViernes, IvSabado, IvDomingo)
-
-// Define un arreglo con todos tus drawables
-        val drawables = arrayOf(R.drawable.lunes, R.drawable.martes, R.drawable.miercoles, R.drawable.jueves, R.drawable.viernes, R.drawable.sabado, R.drawable.domingo)
-
-// Verifica si hoy es lunes
-        if (diaDeLaSemana == 1) for (i in imageViews.indices)  imageViews[i].setImageResource(drawables[i])
 
     }
 
@@ -244,7 +279,8 @@ class MenuPrincipal : ComponentActivity() {
         Log.d("Subtipo", "Subtipo de actividad: $subtipo")
         when (subtipo) {
             "escritura" -> actividadesMP.popEscritura(contsto,tvTit.text.toString(), tvDescripcion.text.toString(),puntos.toString())
-            "foto" -> actividadesMP.popImagen(this,tvTit.text.toString(), tvDescripcion.text.toString())
+            "foto" -> pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+            "seleccionMultiple" -> actividadesMP.popSeleccionMultiple(contsto, tvTit.text.toString(), tvDescripcion.text.toString(), puntos.toString())
             else -> Log.d("MiWorker", "Parámetro inválido")
         }
 
@@ -252,18 +288,18 @@ class MenuPrincipal : ComponentActivity() {
 
     fun aux(context: Context,uid: String){
         val tvMonedas = (context as MenuPrincipal).findViewById<TextView>(R.id.tvMonedas)
-        val tvNotificacion = (context as MenuPrincipal).findViewById<TextView>(R.id.cTVnoti)
-        val btnEnviar = (context as MenuPrincipal).findViewById<TextView>(R.id.btnEnviarActividad)
-        val IvCargaCircular = (context as MenuPrincipal).findViewById<CircularProgressIndicator>(R.id.CargaCircular)
-        val layout = (context as MenuPrincipal).findViewById<RelativeLayout>(R.id.layoutTarea)
+        val tvNotificacion = context.findViewById<TextView>(R.id.cTVnoti)
+        val btnEnviar = context.findViewById<TextView>(R.id.btnEnviarActividad)
+        val IvCargaCircular = context.findViewById<CircularProgressIndicator>(R.id.CargaCircular)
+        val layout = context.findViewById<RelativeLayout>(R.id.layoutTarea)
 
-        val IvLunes = (context as MenuPrincipal).findViewById<ImageView>(R.id.Lunes)
-        val IvMartes = (context as MenuPrincipal).findViewById<ImageView>(R.id.Martes)
-        val IvMiercoles = (context as MenuPrincipal).findViewById<ImageView>(R.id.Miercoles)
-        val IvJueves = (context as MenuPrincipal).findViewById<ImageView>(R.id.Jueves)
-        val IvViernes = (context as MenuPrincipal).findViewById<ImageView>(R.id.Viernes)
-        val IvSabado = (context as MenuPrincipal).findViewById<ImageView>(R.id.Sabado)
-        val IvDomingo = (context as MenuPrincipal).findViewById<ImageView>(R.id.Domingo)
+        val IvLunes = context.findViewById<ImageView>(R.id.IvLunes)
+        val IvMartes = context.findViewById<ImageView>(R.id.IvMartes)
+        val IvMiercoles = context.findViewById<ImageView>(R.id.IvMiercoles)
+        val IvJueves = context.findViewById<ImageView>(R.id.IvJueves)
+        val IvViernes = context.findViewById<ImageView>(R.id.IvViernes)
+        val IvSabado = context.findViewById<ImageView>(R.id.IvSabado)
+        val IvDomingo = context.findViewById<ImageView>(R.id.IvDomingo)
 
         Handler(Looper.getMainLooper()).postDelayed({
             val jsonArray = actividadesMP.leeArchivo(context,"Usuarios")
@@ -278,14 +314,11 @@ class MenuPrincipal : ComponentActivity() {
             }
             if (objetoBuscado != null) {
                 Log.d("Objeto","Entra a objeto buscado")
-                tvMonedas.text = "$ ${objetoBuscado.getInt("monedas").toString()}"
+                tvMonedas.text = "$ ${objetoBuscado.getInt("monedas")}"
             } else {
                 Log.d("MiApp", "No se encontró el usuario")
             }
         }, 5000)
-
-    tvNotificacion.text = "Actividad realizada!"
-        btnEnviar.isEnabled = false
 
         val diaDeLaSemana = LocalDate.now().dayOfWeek.value
         val imageViews = arrayOf(IvLunes, IvMartes, IvMiercoles, IvJueves, IvViernes, IvSabado, IvDomingo)
@@ -295,11 +328,32 @@ class MenuPrincipal : ComponentActivity() {
         IvCargaCircular.isVisible = false
         layout.isVisible = false
 
+        val dias = listOf("IvLunes", "IvMartes", "IvMiercoles", "IvJueves", "IvViernes", "IvSabado", "IvDomingo")
+
+// Obtiene el nombre del día correspondiente al número del día de la semana
+        val nombreDelDia = dias[diaDeLaSemana - 1]
+
         val sharedPref = context.getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
+        val jsonString = sharedPref.getString("diasSemana", "")
+
+        val type = object : TypeToken<Map<String, String>>() {}.type
+        val recuperadoMap: Map<String, String> = Gson().fromJson(jsonString, type)
+        val mutableMap = recuperadoMap.toMutableMap()
+
+// Reemplaza el valor por el nuevo valor
+        val valorActual = mutableMap[nombreDelDia]
+        mutableMap[nombreDelDia] = "$valorActual" + "bien"
+
+// Guarda el nuevo valor en las SharedPreferences
+        val nuevoJsonString = Gson().toJson(mutableMap.toMap())
         val editor = sharedPref.edit()
+        editor.putString("diasSemana", nuevoJsonString)
         editor.putString("actNotificacion", "Actividad Realizada!")
         editor.putBoolean("actBotonEnviar", false)
         editor.apply()
+
+        tvNotificacion.text = sharedPref.getString("actNotificacion","")
+        btnEnviar.isEnabled = sharedPref.getBoolean("actBotonEnviar",true)
     }
 
     @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
@@ -330,23 +384,59 @@ class MenuPrincipal : ComponentActivity() {
 
         // Compara las fechas
         val sharedPref = getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
+        val editor = sharedPref.edit()
         val FIRST_RUN = "first_run"
         val firstRun = sharedPref.getBoolean(FIRST_RUN, true)
 
         if (currentDay != lastOpenDay && firstRun == false) {
             actMenu.AsignarTareas(this)
-            tvNotificacion.text = "Tienes una nueva asignacion!"
-            btnEnviar.isEnabled = true
+            editor.putString("actNotificacion","Tienes una nueva asignacion!")
+            editor.putBoolean("actBotonEnviar",true)
+
             prefs.edit().putLong(LAST_OPEN_DATE, currentDate).apply()
+
+            //Reinicia dias de la semana si es lunes:
+            val diaDeLaSemana = LocalDate.now().dayOfWeek.value
+            if (diaDeLaSemana == 1) { // Si es lunes
+                val diasSemana: Map<String, String> =
+                    mapOf("IvLunes" to "lunes", "IvMartes" to "martes", "IvMiercoles" to "miercoles",
+                        "IvJueves" to "jueves","IvViernes" to "viernes","IvSabado" to "sabado",
+                        "IvDomingo" to "domingo")
+
+                val jsonString = Gson().toJson(diasSemana)
+
+                editor.putString("diasSemana", jsonString)
+                editor.apply()
+
+            }else{
+                val dias = listOf("IvLunes", "IvMartes", "IvMiercoles", "IvJueves", "IvViernes", "IvSabado", "IvDomingo")
+// Obtiene el nombre del día correspondiente al número del día de la semana de ayer
+                val nombreDelDia = dias[diaDeLaSemana - 2]
+                val jsonString = sharedPref.getString("diasSemana", "")
+
+                val type = object : TypeToken<Map<String, String>>() {}.type
+                val recuperadoMap: Map<String, String> = Gson().fromJson(jsonString, type)
+                val mutableMap = recuperadoMap.toMutableMap()
+
+// Reemplaza el valor por el nuevo valor
+                val valorActual = mutableMap[nombreDelDia]
+                if (!valorActual!!.contains("bien")){
+                    mutableMap[nombreDelDia] = "$valorActual" + "mal"
+                    val nuevoJsonString = Gson().toJson(mutableMap.toMap())
+                    editor.putString("diasSemana", nuevoJsonString)
+                    editor.apply()
+                }
+            }
+
+            editor.apply()
         }
 
         //-----------------------
         // Recuperar el texto de la variable elemento usando la misma clave
-        val descripcion = sharedPref.getString("descripcion", "")
-        val titulo = sharedPref.getString("titulo", "")
-
-        tvDescripcion.text = descripcion
-        tvTit.text = titulo
+        tvNotificacion.text = sharedPref.getString("actNotificacion","")
+        tvDescripcion.text = sharedPref.getString("descripcion", "")
+        tvTit.text =  sharedPref.getString("titulo", "")
+        btnEnviar.isEnabled = sharedPref.getBoolean("actBotonEnviar",true)
 
     }
 

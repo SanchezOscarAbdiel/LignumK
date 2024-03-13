@@ -9,9 +9,11 @@ import java.io.File
 import java.io.FileReader
 import kotlin.random.Random
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.text.Editable
@@ -25,7 +27,11 @@ import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import android.view.LayoutInflater
+import android.widget.ImageButton
 import android.widget.ImageView
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.isVisible
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.GenerateContentResponse
@@ -42,6 +48,7 @@ import java.util.concurrent.TimeUnit
 
 val cFirebaseA = ConexionFirebase()
 val cPrimeraVez = PrimeraVez()
+val cSelectorFotos = SelectorFotos()
 val cMenuPrincipal = MenuPrincipal()
 
 class Actividades{
@@ -65,7 +72,7 @@ class Actividades{
         response.text?.let { popRetroalimentacion(contexto, it, titulo) }
     }
 
-    suspend fun samAIimagen(contexto: Context, titulo: String){
+    suspend fun samAIimagen(contexto: Context, titulo: String, descripcion: String,respuesta: String, puntos: String){
 
         val generativeModel = GenerativeModel(
             // Use a model that's applicable for your use case (see "Implement basic use cases" below)
@@ -86,7 +93,7 @@ class Actividades{
 
             val inputContent = content {
                 image(image1)
-                text("What's different between these pictures?")
+                text("A un trabajador de una empresa madedera se le asignó una actividad que lleva por titulo: '${titulo}' teniendo que hacer lo siguiente:'${descripcion}'. esta fue su respuesta: '${respuesta}' ademas de adjuntar esta imagen. puntua su respuesta con un rango de 0 a '${puntos}' (escribe asi: -x/${puntos}-) y escribe algo interesante acerca del tema")
             }
 
             val response = generativeModel.generateContent(inputContent)
@@ -224,18 +231,27 @@ class Actividades{
 
     }
 
-    fun popImagen(contexto: Context, titulo: String, descripcion: String){
+    fun popImagen(contexto: Context, titulo: String, descripcion: String,puntos: String){
         val inflater = LayoutInflater.from(contexto)
-        val view = inflater.inflate(R.layout.activity_dialog_foto, null)
+        val view = inflater.inflate(R.layout.activity_selector_fotos, null)
         var texto = view.findViewById<EditText>(R.id.myEditText)
+        var imagen = view.findViewById<ImageView>(R.id.myImageButton)
+        val im = ImageView(contexto)
 
+        val sharedPref = contexto.getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
+        val uri = Uri.parse(sharedPref.getString("fotoTarea",""))
+
+        imagen.setImageURI(uri)
 // Crear el dialogo
         val dialog = MaterialAlertDialogBuilder(contexto)
             .setTitle(titulo)
             .setMessage(descripcion)
-            .setView(view)  // Agregar el layout al dialogo
+            .setView(view)
+            //.setView(im)
             .setPositiveButton("Aceptar") { dialog, which ->
-
+                CoroutineScope(Dispatchers.Main).launch {
+                    samAIimagen(contexto,titulo,descripcion,texto.text.toString(), puntos)
+                }
             }
             .setNegativeButton("Cancelar", null)
             .show()
@@ -255,6 +271,27 @@ class Actividades{
 
 // Deshabilitar inicialmente el botón de acción positiva
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false
+    }
+
+    fun popSeleccionMultiple(contexto: Context,titulo: String, descripcion: String,puntos: String){
+     //leer tareas, buscar la del titulo, encontrar opciones y listarlas, encontrar respuesta correcta
+
+        val dialog = MaterialAlertDialogBuilder(contexto)
+            .setTitle("I am the title")
+            .setPositiveButton("Positive") { dialog, which ->
+                // Do something.
+            }
+            .setNegativeButton("Negative") { dialog, which ->
+                // Do something else.
+            }
+            .setSingleChoiceItems(
+                arrayOf("Item One", "Item Two", "Item Three"), 0
+            ) { dialog, which ->
+                // Do something.
+            }
+        dialog.show()
+
+
     }
 
     fun oneTimeR(contexto: Context, delay: Long,para: String){
