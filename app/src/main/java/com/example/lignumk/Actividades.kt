@@ -27,8 +27,12 @@ import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.ArrayAdapter
 import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.TextView
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -37,6 +41,7 @@ import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.GenerateContentResponse
 import com.google.ai.client.generativeai.type.content
 import com.google.android.material.progressindicator.CircularProgressIndicator
+import com.google.android.material.progressindicator.LinearProgressIndicator
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -60,20 +65,43 @@ class Actividades{
         return JSONArray(contenido)
     }
 
-    suspend fun samAItexto(contexto: Context,titulo: String, descripcion: String, respuesta: String,puntos:String) {
+    suspend fun samAItexto(contexto: Context,titulo: String, descripcion: String, respuesta: String,puntos:String,progressIndicator:LinearProgressIndicator) {
+        val generativeModel = GenerativeModel(
+            modelName = "gemini-pro",
+            apiKey = "AIzaSyDo5BH4jyyrGS28OIpMTdpTL-Zx3oVGKbI"
+        )
+        progressIndicator.visibility = View.VISIBLE
+
+        val Prompt = "A un trabajador de una empresa madedera se le asignó una actividad que lleva por titulo: " +
+                "'${titulo}' teniendo que hacer lo siguiente:'${descripcion}'. esta fue su respuesta: " +
+                "'${respuesta}'. puntua su respuesta con un rango de 0 a '${puntos}' (escribe asi: -x/${puntos}-) " +
+                "y escribe un dato curioso corto corto acerca del tema y su respuesta"
+        val response = generativeModel.generateContent(Prompt)
+
+        response.text?.let { popRetroalimentacion(contexto, it, titulo,progressIndicator) }
+    }
+
+    suspend fun samAISeleccion(contexto: Context,titulo: String, descripcion: String, respuesta: String, opcionCorrecta:String ,puntos:String,progressIndicator: LinearProgressIndicator) {
+        progressIndicator.visibility = View.VISIBLE
         val generativeModel = GenerativeModel(
             modelName = "gemini-pro",
             apiKey = "AIzaSyDo5BH4jyyrGS28OIpMTdpTL-Zx3oVGKbI"
         )
 
-        val Prompt = "A un trabajador de una empresa madedera se le asignó una actividad que lleva por titulo: '${titulo}' teniendo que hacer lo siguiente:'${descripcion}'. esta fue su respuesta: '${respuesta}'. puntua su respuesta con un rango de 0 a '${puntos}' (escribe asi: -x/${puntos}-) y escribe retroalimentacion corta acerca del tema"
+        val Prompt = "A un trabajador de una empresa madedera se le asignó una actividad que lleva " +
+                "por titulo: '${titulo}' teniendo que responder la siguiente pregunta de opcion multiple:" +
+                "'${descripcion}'. esta fue la respuesta que selecciono: '${respuesta}', la respuesta correcta " +
+                "a la pregunta es: ${opcionCorrecta}. puntua su respuesta con un rango de 0 a '${puntos}' " +
+                "(escribe asi: -x/${puntos}-) y escribe un dato curioso corto acerca del tema o su respuesta " +
+                "que incite el uso de equipo de seguridad a pesar de no querer"
+
         val response = generativeModel.generateContent(Prompt)
 
-        response.text?.let { popRetroalimentacion(contexto, it, titulo) }
+        response.text?.let { popRetroalimentacion(contexto, it, titulo,progressIndicator) }
     }
 
-    suspend fun samAIimagen(contexto: Context, titulo: String, descripcion: String,respuesta: String, puntos: String){
-
+    suspend fun samAIimagen(contexto: Context, titulo: String, descripcion: String,respuesta: String, puntos: String,progressIndicator: LinearProgressIndicator){
+        progressIndicator.visibility = View.VISIBLE
         val generativeModel = GenerativeModel(
             // Use a model that's applicable for your use case (see "Implement basic use cases" below)
             modelName = "gemini-pro-vision",
@@ -86,19 +114,20 @@ class Actividades{
             val uri = Uri.parse(uriString)
             val inputStream = contexto.contentResolver.openInputStream(uri)
             val bitmap = BitmapFactory.decodeStream(inputStream)
-            // Ahora, puedes usar el Bitmap. Por ejemplo:
-            // myImageView.setImageBitmap(bitmap)
 
             val image1: Bitmap = bitmap
 
             val inputContent = content {
                 image(image1)
-                text("A un trabajador de una empresa madedera se le asignó una actividad que lleva por titulo: '${titulo}' teniendo que hacer lo siguiente:'${descripcion}'. esta fue su respuesta: '${respuesta}' ademas de adjuntar esta imagen. puntua su respuesta con un rango de 0 a '${puntos}' (escribe asi: -x/${puntos}-) y escribe algo interesante acerca del tema")
+                text("A un trabajador de una empresa madedera se le asignó una actividad que lleva por titulo: " +
+                        "'${titulo}' teniendo que hacer lo siguiente:'${descripcion}'. esta fue su respuesta: " +
+                        "'${respuesta}' ademas de adjuntar esta imagen. Analiza su imagen y puntuala dependiendo si coincide con lo requerido " +
+                        "con un rango de 0 a '${puntos}' (escribe asi: -x/${puntos}-) y escribe algo corto e interesante acerca del tema o su respuesta")
             }
 
             val response = generativeModel.generateContent(inputContent)
             response.text?.let {
-                popRetroalimentacion(contexto, it, titulo)
+                popRetroalimentacion(contexto, it, titulo,progressIndicator)
             }
         }
 
@@ -136,7 +165,7 @@ class Actividades{
             }, 5000)
         }
     }
-    fun popEscritura(contexto: Context, titulo: String, descripcion: String, puntos: String){
+    fun popEscritura(contexto: Context, titulo: String, descripcion: String, puntos: String,progressIndicator: LinearProgressIndicator){
         val editText = EditText(contexto)
         val dialog =MaterialAlertDialogBuilder(contexto)
             .setTitle(titulo)
@@ -149,7 +178,7 @@ class Actividades{
                 val inputText = editText.text.toString()
 
                 CoroutineScope(Dispatchers.Main).launch {
-                    samAItexto(contexto,titulo, descripcion, inputText, puntos)
+                    samAItexto(contexto,titulo, descripcion, inputText, puntos,progressIndicator)
                 }
             }
             .show()
@@ -172,7 +201,9 @@ class Actividades{
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false
     }
 
-    fun popRetroalimentacion(contexto: Context,result: String, titulo: String) {
+    fun popRetroalimentacion(contexto: Context,result: String, titulo: String,progressIndicator: LinearProgressIndicator) {
+        progressIndicator.visibility = View.GONE
+        progressIndicator.visibility = View.GONE
         val dialog =MaterialAlertDialogBuilder(contexto)
             .setTitle(titulo)
             .setMessage(result)
@@ -195,6 +226,7 @@ class Actividades{
         IvCargaCircular.isVisible = true
         val sharedPref = contexto.getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
         var uid = sharedPref.getString("UID", "")
+        val racha = sharedPref.getInt("racha", 0)
 
         val json = actividadesMP.leeArchivo(contexto,"Usuarios")
         var objetoBuscado: JSONObject? = null
@@ -219,6 +251,7 @@ class Actividades{
         jsonObject.put("coleccion", "Usuarios")
         jsonObject.put("documento", uid)
         jsonObject.put("monedas",monedas)
+        jsonObject.put("racha",racha+1)
 
         val jsonDatos = jsonObject.toString()
 
@@ -231,7 +264,7 @@ class Actividades{
 
     }
 
-    fun popImagen(contexto: Context, titulo: String, descripcion: String,puntos: String){
+    fun popImagen(contexto: Context, titulo: String, descripcion: String,puntos: String,progressIndicator: LinearProgressIndicator){
         val inflater = LayoutInflater.from(contexto)
         val view = inflater.inflate(R.layout.activity_selector_fotos, null)
         var texto = view.findViewById<EditText>(R.id.myEditText)
@@ -249,8 +282,9 @@ class Actividades{
             .setView(view)
             //.setView(im)
             .setPositiveButton("Aceptar") { dialog, which ->
+
                 CoroutineScope(Dispatchers.Main).launch {
-                    samAIimagen(contexto,titulo,descripcion,texto.text.toString(), puntos)
+                    samAIimagen(contexto,titulo,descripcion,texto.text.toString(), puntos,progressIndicator)
                 }
             }
             .setNegativeButton("Cancelar", null)
@@ -273,25 +307,56 @@ class Actividades{
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false
     }
 
-    fun popSeleccionMultiple(contexto: Context,titulo: String, descripcion: String,puntos: String){
-     //leer tareas, buscar la del titulo, encontrar opciones y listarlas, encontrar respuesta correcta
+    fun popSeleccionMultiple(contexto: Context,titulo: String, descripcion: String,puntos: String,progressIndicator: LinearProgressIndicator){
+        val json = objBuscado(contexto, "Tareas","titulo",titulo)
+        Log.d("json", "Json seleccion: $json")
+        val opciones = ArrayList<String>()
+
+        json!!.keys().forEach { key ->
+            if (key.startsWith("opcion")) {
+                opciones.add(json.getString(key))
+            }
+        }
+        Log.d("json", "array seleccion: $opciones")
+
+        val adapter = object : ArrayAdapter<String>(contexto, R.layout.list_item, opciones) {
+            override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+                val view = convertView ?: LayoutInflater.from(contexto).inflate(R.layout.list_item, parent, false)
+                val textView = view.findViewById<TextView>(R.id.option_text)
+                textView.text = opciones[position]
+                return view
+            }
+        }
 
         val dialog = MaterialAlertDialogBuilder(contexto)
-            .setTitle("I am the title")
-            .setPositiveButton("Positive") { dialog, which ->
-                // Do something.
-            }
-            .setNegativeButton("Negative") { dialog, which ->
-                // Do something else.
-            }
-            .setSingleChoiceItems(
-                arrayOf("Item One", "Item Two", "Item Three"), 0
-            ) { dialog, which ->
-                // Do something.
+            .setTitle(titulo)
+            .setAdapter(adapter) { dialog, which ->
+                val opcionSeleccionada = opciones[which]
+                CoroutineScope(Dispatchers.Main).launch {
+                    samAISeleccion(contexto,titulo,descripcion,opcionSeleccionada,json.getString("correcta"),puntos,progressIndicator)
+                    dialog.cancel()
+                    }
             }
         dialog.show()
+    }
 
+    fun objBuscado(contexto: Context, coleccion: String, campo:String, buscado:String): JSONObject? {
+        val jsonArray = leeArchivo(contexto,coleccion)
+        var objetoBuscado: JSONObject? = null
 
+        for (i in 0 until jsonArray.length()) {
+            val objeto = jsonArray.getJSONObject(i)
+            if (objeto.getString(campo) == buscado) {
+                objetoBuscado = objeto
+                break
+            }
+        }
+        if (objetoBuscado != null) {
+            Log.d("Objeto","Entra a objeto buscado")
+            return objetoBuscado
+        } else {
+            return null
+        }
     }
 
     fun oneTimeR(contexto: Context, delay: Long,para: String){

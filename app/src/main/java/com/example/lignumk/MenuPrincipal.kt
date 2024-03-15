@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 //Clases
 import ConexionFirebase
 import android.animation.LayoutTransition
+import android.animation.ObjectAnimator
 
 // Importar la clase Context
 import android.content.Context
@@ -44,20 +45,29 @@ import java.util.Calendar
 import java.util.concurrent.Executors
 import android.app.AlertDialog
 import android.net.Uri
+import android.view.LayoutInflater
+import android.view.ViewGroup
+import android.view.animation.AccelerateDecelerateInterpolator
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
+import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.card.MaterialCardView
+import com.google.android.material.carousel.CarouselSnapHelper
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 import com.google.android.material.progressindicator.CircularProgressIndicator
+import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.common.reflect.TypeToken
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.json.JSONObject
+import kotlin.concurrent.thread
+import kotlin.properties.Delegates
 
 
 val cFirebase = ConexionFirebase()
@@ -76,6 +86,8 @@ class MenuPrincipal : ComponentActivity() {
     lateinit var layoutTarea: RelativeLayout
     lateinit var tvNotificacion: TextView
     lateinit var btnEnviar: ExtendedFloatingActionButton
+    lateinit var progressIndicator: LinearProgressIndicator
+   // lateinit var carouselRecycler: RecyclerView
 
     //DiasSemana
     lateinit var IvLunes: ImageView
@@ -93,16 +105,19 @@ class MenuPrincipal : ComponentActivity() {
     private lateinit var googleSignInClient: GoogleSignInClient
     private lateinit var pickMedia: ActivityResultLauncher<PickVisualMediaRequest>
     private lateinit var auth: FirebaseAuth
+    private var firstRun by Delegates.notNull<Boolean>()
     val contsto = this
-
-    override fun onResume() {
-        super.onResume()
-        Log.d("Resume ", "Entra a OnResume")
-        cardUsuario(this)
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        VerificaPrimeraVez()
+        val carouselRecycler = findViewById<RecyclerView>(R.id.carouselRecyclerView)
+        CarouselSnapHelper().attachToRecyclerView(carouselRecycler)
+        carouselRecycler.adapter = CarouselAdapter(images = getImages())
+
+        val sharedPref = getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
+        val FIRST_RUN = "first_run"
+        firstRun = sharedPref.getBoolean(FIRST_RUN, true)
 
         pickMedia = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
             if (uri != null) {
@@ -123,7 +138,7 @@ class MenuPrincipal : ComponentActivity() {
                 editor.apply()
 
                 val puntos = sharedPref.getString("puntos","")
-                actividadesMP.popImagen(this,tvTit.text.toString(), tvDescripcion.text.toString(),puntos.toString())//
+                actividadesMP.popImagen(this,tvTit.text.toString(), tvDescripcion.text.toString(),puntos.toString(),progressIndicator)//
             } else {
 
             }
@@ -143,6 +158,7 @@ class MenuPrincipal : ComponentActivity() {
         layoutTarea = findViewById(R.id.layoutTarea)
         tvNotificacion = findViewById(R.id.cTVnoti)
         btnEnviar = findViewById(R.id.btnEnviarActividad)
+        progressIndicator = findViewById(R.id.progress_indicator)
 
         IvLunes = findViewById(R.id.IvLunes)
         IvMartes = findViewById(R.id.IvMartes)
@@ -152,7 +168,7 @@ class MenuPrincipal : ComponentActivity() {
         IvSabado = findViewById(R.id.IvSabado)
         IvDomingo = findViewById(R.id.IvDomingo)
 
-        VerificaPrimeraVez()
+
 
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken(getString(R.string.default_web_client_id))
@@ -162,14 +178,15 @@ class MenuPrincipal : ComponentActivity() {
 
         layout.layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
 
-        val sharedPref = getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
         var firtRun = sharedPref.getBoolean("first_run", true)
-        if (!firtRun)
+        if (!firtRun) {
             cardUsuario(this)
-
+            cardUsuario(this)
+        }
     }
 
     fun cardUsuario(context: Context){
+        progressIndicator.visibility = View.VISIBLE
 
         val sharedPref = context.getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
         var nombre = sharedPref.getString("UserName", "")
@@ -222,36 +239,39 @@ class MenuPrincipal : ComponentActivity() {
                 user?.let {
                     val photoURL = it.photoUrl
 
-                    var image:Bitmap? = null
+                    var image: Bitmap? = null
                     val imageurl = photoURL.toString()
                     val executorService = Executors.newSingleThreadExecutor()
-                    executorService.execute{
+                    executorService.execute {
                         try {
                             val `in` = java.net.URL(imageurl).openStream()
                             image = BitmapFactory.decodeStream(`in`)
-                        }catch (e:Exception){
-                            Toast.makeText(this,"Error", Toast.LENGTH_SHORT).show()
-                        }
-                        runOnUiThread{
-                            try {
-                                Thread.sleep(1000)
-                                //Imagen placed
-                                fotoPerfil.setImageBitmap(image)
 
-                            }catch (e:InterruptedException){
-                                Toast.makeText(this,"Error", Toast.LENGTH_SHORT).show()
+                            runOnUiThread {
+                                try {
+                                    Log.d("xd", "Entra a bitmap")
+                                    Thread.sleep(1000)
+                                    Log.d("image","imagen $image")
+                                    fotoPerfil.setImageBitmap(image)
+                                } catch (e: InterruptedException) {
+                                    Log.d("tag1","Error UI 1")
+                                }
+                            }
+                        } catch (e: Exception) {
+                            runOnUiThread {
+                                Log.d("tag1","Error UI 2")
                             }
                         }
                     }
                 }
+
             }
         }catch (e: FileNotFoundException) {
             Log.d("TAG", "Archivo no encontrado, reintentando en 5 segundos", e)
             Handler(Looper.getMainLooper()).postDelayed({
                 // Reintentar AsignarTareas después de 5 segundos
                 val json = actividadesMP.leeArchivo(this,"Usuarios")
-                val jsonO = json.getJSONObject(0)
-                tvMonedas.text = "${tvMonedas.text} ${jsonO.getString("monedas")}"
+                cardUsuario(this)
             }, 5000)
         }finally {
             Log.d("TAG", "No se pudo w")
@@ -260,7 +280,17 @@ class MenuPrincipal : ComponentActivity() {
         //-------------
         val diaDeLaSemana = LocalDate.now().dayOfWeek.value
         progreso.progress = diaDeLaSemana-1
+        progressIndicator.visibility = View.GONE
+    }
+    fun cardSemanal(){
 
+    }
+
+    fun getImages():List<String>{
+        return listOf(
+            "https://images.wallpapersden.com/image/download/lumine-genshin-impact-4k_bGlmZ2uUmZqaraWkpJRmZW1lrWZuZ2U.jpg",
+            "https://www.pcgamesn.com/wp-content/sites/pcgamesn/2022/10/genshin-impact-nahida-materials.jpg"
+        )
     }
 
     fun DepCard(view: View){
@@ -275,15 +305,17 @@ class MenuPrincipal : ComponentActivity() {
         val subtipo = sharedPref.getString("subtipo","")
         val puntos = sharedPref.getString("puntos","")
 
+
+// Muestra el indicador de progreso antes de iniciar la operación de larga duración
         var result =""
         Log.d("Subtipo", "Subtipo de actividad: $subtipo")
         when (subtipo) {
-            "escritura" -> actividadesMP.popEscritura(contsto,tvTit.text.toString(), tvDescripcion.text.toString(),puntos.toString())
+            "escritura" -> actividadesMP.popEscritura(contsto,tvTit.text.toString(), tvDescripcion.text.toString(),puntos.toString(),progressIndicator)
             "foto" -> pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-            "seleccionMultiple" -> actividadesMP.popSeleccionMultiple(contsto, tvTit.text.toString(), tvDescripcion.text.toString(), puntos.toString())
+            "seleccionMultiple" -> actividadesMP.popSeleccionMultiple(contsto, tvTit.text.toString(), tvDescripcion.text.toString(), puntos.toString(),progressIndicator)
             else -> Log.d("MiWorker", "Parámetro inválido")
         }
-
+progressIndicator.visibility = View.GONE
     }
 
     fun aux(context: Context,uid: String){
@@ -335,6 +367,7 @@ class MenuPrincipal : ComponentActivity() {
 
         val sharedPref = context.getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
         val jsonString = sharedPref.getString("diasSemana", "")
+        val racha = sharedPref.getInt("racha",0)
 
         val type = object : TypeToken<Map<String, String>>() {}.type
         val recuperadoMap: Map<String, String> = Gson().fromJson(jsonString, type)
@@ -350,10 +383,12 @@ class MenuPrincipal : ComponentActivity() {
         editor.putString("diasSemana", nuevoJsonString)
         editor.putString("actNotificacion", "Actividad Realizada!")
         editor.putBoolean("actBotonEnviar", false)
+        editor.putInt("racha", racha+1)
         editor.apply()
 
         tvNotificacion.text = sharedPref.getString("actNotificacion","")
         btnEnviar.isEnabled = sharedPref.getBoolean("actBotonEnviar",true)
+
     }
 
     @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
@@ -385,8 +420,6 @@ class MenuPrincipal : ComponentActivity() {
         // Compara las fechas
         val sharedPref = getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
         val editor = sharedPref.edit()
-        val FIRST_RUN = "first_run"
-        val firstRun = sharedPref.getBoolean(FIRST_RUN, true)
 
         if (currentDay != lastOpenDay && firstRun == false) {
             actMenu.AsignarTareas(this)

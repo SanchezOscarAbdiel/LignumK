@@ -4,9 +4,12 @@ import android.content.Context
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.Manifest
+import android.content.ContentValues.TAG
 import android.util.Log
 import android.view.View
 import android.widget.AdapterView
@@ -17,6 +20,7 @@ import android.widget.CheckBox
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.Spinner
+import java.util.concurrent.CompletableFuture
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -57,12 +61,16 @@ import androidx.compose.ui.graphics.painter.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
-import coil.compose.ImagePainter
-import coil.compose.rememberImagePainter
+import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
+import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.gson.Gson
+import kotlinx.coroutines.future.await
+import kotlinx.coroutines.launch
 
 
 class PrimeraVez : AppCompatActivity() {
@@ -73,13 +81,14 @@ class PrimeraVez : AppCompatActivity() {
     lateinit var chGrop: ChipGroup
     lateinit var imgBtn: ImageButton
     lateinit var cbCorreo: CheckBox
-    lateinit var gifCarga: ImageView
+    lateinit var progressIndicator: LinearProgressIndicator
 
     var esAut = false
     var esSpn = false
     var Puid = ""
     lateinit var Pimg: ByteArray
     lateinit var Pspinner: String
+    companion object { private const val CAMERA_REQUEST_CODE = 100 }
 
     private lateinit var googleSignInClient: GoogleSignInClient
     private lateinit var auth: FirebaseAuth
@@ -96,11 +105,14 @@ class PrimeraVez : AppCompatActivity() {
         chGrop = findViewById(R.id.chipGroup)
         imgBtn = findViewById(R.id.ImButtonFotoPerfil)
         cbCorreo = findViewById(R.id.CbNotificacion)
-        gifCarga = findViewById(R.id.imgCargando)
+        progressIndicator = findViewById(R.id.progress_indicatorPV)
 
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), CAMERA_REQUEST_CODE)
+        } else {
 
-        Glide.with(this).load(R.drawable.cargando).into(gifCarga)
-        gifCarga.visibility = View.GONE
+        }
+
 
         pickMedia = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
             if (uri != null) {
@@ -135,6 +147,23 @@ class PrimeraVez : AppCompatActivity() {
 
     }
 
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        when (requestCode) {
+            CAMERA_REQUEST_CODE -> {
+                if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                    // El permiso fue concedido, puedes usar la cámara
+                    //useCamera()
+                } else {
+                    // El permiso fue denegado
+                }
+                return
+            }
+            else -> {
+                // Ignora todos los otros códigos de solicitud
+            }
+        }
+    }
 
     fun seleccionaImagen(view: View) {
 
@@ -143,8 +172,8 @@ class PrimeraVez : AppCompatActivity() {
     }
 
     fun continuar(view: View) {
-
-        gifCarga.visibility = View.VISIBLE
+        val sharedPref = this.getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
+        progressIndicator.visibility = View.VISIBLE
         val chipsSeleccionados = chGrop.checkedChipIds.map { id ->
             val chip = findViewById<Chip>(id)
             chip.text.toString()
@@ -162,34 +191,38 @@ class PrimeraVez : AppCompatActivity() {
             jsonObject.put("Puesto", Pspinner)
             jsonObject.put("Ddescanso", chipsSeleccionados)
             jsonObject.put("monedas", 0)
+            jsonObject.put("racha",0)
 
 // Convertir el objeto JSON a una cadena JSON
             val jsonDatos = jsonObject.toString()
 
-// Imprimir el JSON (puedes guardarlo en un archivo o enviarlo a un servidor)
+            lifecycleScope.launch {
+                try {
+                    cFirebase.PostData(jsonDatos).await()
 
-            cFirebase.PostData(jsonDatos)
+                    //Habilita drawables dia de la semana
+                    val diasSemana: Map<String, String> =
+                        mapOf("IvLunes" to "lunes", "IvMartes" to "martes", "IvMiercoles" to "miercoles",
+                            "IvJueves" to "jueves","IvViernes" to "viernes","IvSabado" to "sabado",
+                            "IvDomingo" to "domingo")
+                    val jsonString = Gson().toJson(diasSemana)
 
-            //Habilita drawables dia de la semana
-            val diasSemana: Map<String, String> =
-                mapOf("IvLunes" to "lunes", "IvMartes" to "martes", "IvMiercoles" to "miercoles",
-                    "IvJueves" to "jueves","IvViernes" to "viernes","IvSabado" to "sabado",
-                    "IvDomingo" to "domingo")
-            val jsonString = Gson().toJson(diasSemana)
-            val sharedPref = this.getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
-            val editor = sharedPref.edit()
-            editor.putString("UID", Puid)
-            editor.putString("diasSemana", jsonString)
-            editor.apply()
-
-            Thread.sleep(5000)
-
-            val intent = Intent(this, MenuPrincipal::class.java)
-            startActivity(intent)
+                    val editor = sharedPref.edit()
+                    editor.putString("UID", Puid)
+                    editor.putString("diasSemana", jsonString)
+                    editor.putInt("racha",0)
+                    editor.apply()
+                    val intent = Intent(this@PrimeraVez, MenuPrincipal::class.java)
+                    startActivity(intent)
+                    this@PrimeraVez.finish()
+                } catch (e: Exception) {
+                    // Maneja cualquier excepción que pueda haber ocurrido durante la operación de Firebase
+                    Log.e(TAG, "Error al actualizar los datos en Firebase", e)
+                }
+            }
 
         } else {
             Toast.makeText(this, "Selecciona todos los campos.", Toast.LENGTH_SHORT).show()
-            gifCarga.visibility = View.GONE
         }
     }
 

@@ -9,6 +9,7 @@ import com.google.gson.Gson
 import org.json.JSONObject
 import java.io.File
 import java.io.FileWriter
+import java.util.concurrent.CompletableFuture
 
 class ConexionFirebase {
 
@@ -34,14 +35,15 @@ class ConexionFirebase {
                 val archivoEscritor = FileWriter(archivo)
                 archivoEscritor.write(datosFormateados) // Escribir los datos formateados en el archivo
                 archivoEscritor.close()
-                Log.d(TAG, "Ruta archivo ${archivo.path.toString()}")
+                Log.d(TAG, "Ruta archivo ${archivo.path}")
             }
             .addOnFailureListener { exception ->
                 Log.d(TAG, "get failed with ", exception)
             }
     }
 
-    fun PostData(jsonData: String) {
+    fun PostData(jsonData: String): CompletableFuture<Void> {
+        val future = CompletableFuture<Void>()
         try {
             // Parsear el JSON para obtener la colección, el documento y los campos
             val jsonObject = JSONObject(jsonData)
@@ -60,6 +62,7 @@ class ConexionFirebase {
             documentReference.set(campos)
                 .addOnSuccessListener {
                     Log.d(TAG, "Documento actualizado con éxito")
+                    future.complete(null)
                 }
                 .addOnFailureListener { e ->
                     Log.w(TAG, "Error al actualizar el documento", e)
@@ -67,6 +70,7 @@ class ConexionFirebase {
         } catch (e: Exception) {
             Log.e(TAG, "Error al procesar el JSON", e)
         }
+        return future
     }
 
     fun UpdateData(jsonData: String) {

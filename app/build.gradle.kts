@@ -99,6 +99,7 @@ dependencies {
 
     implementation ("androidx.work:work-runtime-ktx:2.9.0")
     implementation("io.coil-kt:coil-compose:2.4.0")
+    implementation("io.coil-kt:coil:2.5.0")
 
     implementation ("com.google.android.material:material:1.11.0")
 

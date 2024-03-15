@@ -324,15 +324,16 @@
                     app:layout_constraintTop_toBottomOf="@+id/textView12"
                     app:layout_constraintVertical_bias="0.0" />
 
-                <ImageView
-                    android:id="@+id/imgCargando"
-                    android:layout_width="68dp"
-                    android:layout_height="72dp"
-                    android:layout_marginStart="168dp"
-                    android:layout_marginTop="1dp"
+                <com.google.android.material.progressindicator.LinearProgressIndicator
+                    android:id="@+id/progress_indicatorPV"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="25dp"
+                    android:indeterminate="true"
+                    android:visibility="gone"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/SpnPuestos"
-                    tools:srcCompat="@drawable/cargando" />
+                     />
 
 
             </androidx.constraintlayout.widget.ConstraintLayout>
