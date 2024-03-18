@@ -7,9 +7,23 @@
     android:layout_marginEnd="8dp"
     app:shapeAppearance="?attr/shapeAppearanceCornerExtraLarge">
 
-    <androidx.appcompat.widget.AppCompatImageView
-        android:id="@+id/carouselImageView"
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:scaleType="centerCrop"/>
+        android:layout_height="match_parent">
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/carouselImageView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"/>
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/imageText"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:layout_alignParentBottom="true"
+            android:gravity="center"
+            android:textColor="#FFCBA4"
+            android:background="@color/md_theme_light_onPrimaryContainer"/>
+    </RelativeLayout>
 </com.google.android.material.carousel.MaskableFrameLayout>

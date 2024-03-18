@@ -9,11 +9,9 @@ import java.io.File
 import java.io.FileReader
 import kotlin.random.Random
 import android.content.Context
-import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
-import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.text.Editable
@@ -30,8 +28,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
-import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.PickVisualMediaRequest
@@ -78,7 +76,23 @@ class Actividades{
                 "y escribe un dato curioso corto corto acerca del tema y su respuesta"
         val response = generativeModel.generateContent(Prompt)
 
-        response.text?.let { popRetroalimentacion(contexto, it, titulo,progressIndicator) }
+        response.text?.let { popRetroalimentacion(contexto, it, titulo,progressIndicator,"diaria") }
+    }
+
+    suspend fun samAIEncuesta(contexto: Context,titulo: String, descripcion: String, respuesta: String,puntos:String,progressIndicator:LinearProgressIndicator,tipo: String) {
+        val generativeModel = GenerativeModel(
+            modelName = "gemini-pro",
+            apiKey = "AIzaSyDo5BH4jyyrGS28OIpMTdpTL-Zx3oVGKbI"
+        )
+        progressIndicator.visibility = View.VISIBLE
+
+        val Prompt = "A un trabajador de una empresa madedera se le asignó una encuesta, teniendo que " +
+                "responder las siguientes preguntas:'${descripcion}'. estas fueron sus respuestas: " +
+                "'${respuesta}'.escribe: -${puntos}/${puntos}-) " +
+                "y escribe un pequeño comentario constructivo en base a sus respuestas"
+        val response = generativeModel.generateContent(Prompt)
+
+        response.text?.let { popRetroalimentacion(contexto, it, titulo,progressIndicator,tipo) }
     }
 
     suspend fun samAISeleccion(contexto: Context,titulo: String, descripcion: String, respuesta: String, opcionCorrecta:String ,puntos:String,progressIndicator: LinearProgressIndicator) {
@@ -97,7 +111,7 @@ class Actividades{
 
         val response = generativeModel.generateContent(Prompt)
 
-        response.text?.let { popRetroalimentacion(contexto, it, titulo,progressIndicator) }
+        response.text?.let { popRetroalimentacion(contexto, it, titulo,progressIndicator,"diaria") }
     }
 
     suspend fun samAIimagen(contexto: Context, titulo: String, descripcion: String,respuesta: String, puntos: String,progressIndicator: LinearProgressIndicator){
@@ -127,7 +141,7 @@ class Actividades{
 
             val response = generativeModel.generateContent(inputContent)
             response.text?.let {
-                popRetroalimentacion(contexto, it, titulo,progressIndicator)
+                popRetroalimentacion(contexto, it, titulo,progressIndicator,"diaria")
             }
         }
 
@@ -135,25 +149,34 @@ class Actividades{
 
 
 
-    fun AsignarTareas(contexto: Context) {
+    fun AsignarTareas(contexto: Context, tipo:String, documento:String) {
         try {
-            val json = leeArchivo(contexto, "Tareas")
+
+            val json = leeArchivo(contexto, documento)
 
             // Generar un número aleatorio entre 0 y el tamaño del arreglo menos uno
             val indice = Random.nextInt(0, json.length())
             // Obtener el elemento del arreglo json usando el índice
             val elemento = json.getJSONObject(indice)
             // Hacer algo con el elemento, por ejemplo, imprimirlo
-            cFirebaseA.LeerDatos("Tareas", "tipo", "diaria", contexto)
+            cFirebaseA.LeerDatos("Tareas", "tipo", tipo, contexto)
 
             val sharedPref = contexto.getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
             // Obtener un editor de las SharedPreferences
             val editor = sharedPref.edit()
             // Guardar el texto de la variable elemento como un valor asociado a una clave
-            editor.putString("descripcion", elemento.get("descripcion").toString())
-            editor.putString("titulo", elemento.get("titulo").toString())
-            editor.putString("subtipo", elemento.get("subtipo").toString())
-            editor.putString("puntos", elemento.get("puntos").toString())
+            if(tipo == "diaria"){
+                editor.putString("descripcion", elemento.get("descripcion").toString())
+                editor.putString("titulo", elemento.get("titulo").toString())
+                editor.putString("subtipo", elemento.get("subtipo").toString())
+                editor.putString("puntos", elemento.get("puntos").toString())
+            }else{
+                editor.putString("descripcionSemanal", elemento.get("descripcion").toString())
+                editor.putString("tituloSemanal", elemento.get("titulo").toString())
+                editor.putString("subtipoSemanal", elemento.get("subtipo").toString())
+                editor.putString("puntosSemanal", elemento.get("puntos").toString())
+            }
+
             // Guardar los cambios en el archivo
             Log.d("AsignarTareas", "Tareas asignadas")
             editor.apply()
@@ -161,7 +184,7 @@ class Actividades{
             Log.d("TAG", "Archivo no encontrado, reintentando en 5 segundos", e)
             Handler(Looper.getMainLooper()).postDelayed({
                 // Reintentar AsignarTareas después de 5 segundos
-                AsignarTareas(contexto)
+                AsignarTareas(contexto, tipo,documento)
             }, 5000)
         }
     }
@@ -201,7 +224,7 @@ class Actividades{
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false
     }
 
-    fun popRetroalimentacion(contexto: Context,result: String, titulo: String,progressIndicator: LinearProgressIndicator) {
+    fun popRetroalimentacion(contexto: Context,result: String, titulo: String,progressIndicator: LinearProgressIndicator, tipo: String) {
         progressIndicator.visibility = View.GONE
         progressIndicator.visibility = View.GONE
         val dialog =MaterialAlertDialogBuilder(contexto)
@@ -215,10 +238,55 @@ class Actividades{
 
 // Ahora, score es "-10/15-", puedes procesarlo más para obtener solo el número
                 val number = score?.substring(1, score.indexOf("/"))  // Esto debería dar "10"
-                if (number != null)
-                    actualizaActividad(contexto,number)
+                if (number != null) {
+                    if (tipo == "diaria")
+                        actualizaActividad(contexto, number)
+                    else
+                        actualizaSemanal(contexto,number, titulo)
+                }
             }
             .show()
+    }
+
+    private fun actualizaSemanal(contexto: Context, puntos: String, titulo: String) {
+        val IvCargaCircular = (contexto as MenuPrincipal).findViewById<CircularProgressIndicator>(R.id.CargaCircular)
+        IvCargaCircular.isVisible = true
+        val sharedPref = contexto.getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
+        var uid = sharedPref.getString("UID", "")
+
+        val json = actividadesMP.leeArchivo(contexto,"Usuarios")
+        var objetoBuscado: JSONObject? = null
+        var monedas = 0
+
+        for (i in 0 until json.length()) {
+            val objeto = json.getJSONObject(i)
+            if (objeto.getString("UID") == uid) {
+                objetoBuscado = objeto
+                break
+            }
+        }
+        if (objetoBuscado != null) {
+            Log.d("Objeto","Entra a objeto buscado")
+            monedas = objetoBuscado.getInt("monedas") + puntos.toInt()
+        } else {
+            Log.d("MiApp", "No se encontró el usuario")
+        }
+
+
+        val jsonObject = JSONObject()
+        jsonObject.put("coleccion", "Usuarios")
+        jsonObject.put("documento", uid)
+        jsonObject.put("monedas",monedas)
+        jsonObject.put("respuestas","Actividad: $titulo "+sharedPref.getString("respuestasSemanal",""))
+
+        val jsonDatos = jsonObject.toString()
+
+        cFirebaseA.UpdateData(jsonDatos)
+
+        cFirebaseA.LeerDatos("Usuarios","Puesto","Empleado",contexto)
+
+        cMenuPrincipal.auxSemanal(contexto,uid!!)
+
     }
 
     fun actualizaActividad(contexto: Context,puntos: String){
@@ -280,7 +348,6 @@ class Actividades{
             .setTitle(titulo)
             .setMessage(descripcion)
             .setView(view)
-            //.setView(im)
             .setPositiveButton("Aceptar") { dialog, which ->
 
                 CoroutineScope(Dispatchers.Main).launch {
@@ -305,6 +372,51 @@ class Actividades{
 
 // Deshabilitar inicialmente el botón de acción positiva
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false
+    }
+    fun popEncuesta(contexto: Context, titulo: String, descripcion: String, puntos: String,progressIndicator: LinearProgressIndicator){
+        val dialogView = LayoutInflater.from(contexto).inflate(R.layout.dialog_survey, null)
+        val container = dialogView.findViewById<LinearLayout>(R.id.container)
+
+        val json = objBuscado(contexto, "Tareassemanal","titulo",titulo)
+        val opciones = ArrayList<String>()
+
+        json!!.keys().forEach { key ->
+            if (key.startsWith("pregunta")) {
+                opciones.add(json.getString(key))
+            }
+        }
+
+        val editTexts = ArrayList<EditText>()
+
+        for (opcion in opciones) {
+            val questionTextView = TextView(contexto)
+            questionTextView.text = opcion
+            container.addView(questionTextView)
+
+            val answerEditText = EditText(contexto)
+            editTexts.add(answerEditText)
+            container.addView(answerEditText)
+        }
+
+        val dialog = MaterialAlertDialogBuilder(contexto)
+            .setTitle(titulo)
+            .setMessage(descripcion)
+            .setView(dialogView)
+            .setNeutralButton("Cancelar") { dialog, which ->
+
+            }
+            .setPositiveButton("Aceptar") { dialog, which ->
+                val answers = editTexts.map { it.text.toString() }
+                val sharedPref = contexto.getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
+                val editor = sharedPref.edit()
+                editor.putString("respuestasSemanal",answers.toString())
+                editor.apply()
+                CoroutineScope(Dispatchers.Main).launch {
+                        samAIEncuesta(contexto, titulo, opciones.toString(), answers.toString(), puntos, progressIndicator,"semanal")
+                }
+            }
+            .show()
+
     }
 
     fun popSeleccionMultiple(contexto: Context,titulo: String, descripcion: String,puntos: String,progressIndicator: LinearProgressIndicator){

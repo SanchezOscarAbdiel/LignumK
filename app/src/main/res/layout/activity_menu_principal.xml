@@ -266,20 +266,22 @@
 
     </FrameLayout>
 
+
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/cardTareasSemanales"
         android:layout_width="190dp"
         android:layout_height="195dp"
         android:layout_marginTop="50dp"
         android:layout_marginEnd="5dp"
+        android:onClick="cardSemanal"
         app:cardBackgroundColor="#FFCBA4"
         app:cardCornerRadius="20dp"
-        app:cardElevation="10dp"
+
         app:contentPadding="20dp"
+        app:layout_constraintBottom_toTopOf="@id/cardLeaderboard"
         app:layout_constraintEnd_toStartOf="@id/cardTienda"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/cardTareas"
-        app:layout_constraintBottom_toTopOf="@id/cardLeaderboard">
+        app:layout_constraintTop_toBottomOf="@id/cardTareas">
 
 
         <androidx.recyclerview.widget.RecyclerView
@@ -288,14 +290,27 @@
             android:layout_height="170dp"
             android:clipChildren="false"
             android:clipToPadding="false"
-            android:orientation="horizontal"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
+            android:onClick="cardSemanal"
+            android:orientation="vertical"
+            android:paddingStart="1dp"
+            android:paddingEnd="1dp"
             app:layoutManager="com.google.android.material.carousel.CarouselLayoutManager"
             app:layout_constraintStart_toStartOf="@id/cardTareasSemanales"
-            app:layout_constraintTop_toTopOf="@id/cardTareasSemanales"/>
+            app:layout_constraintTop_toTopOf="@id/cardTareasSemanales" />
+
 
     </com.google.android.material.card.MaterialCardView>
+
+    <Button
+        android:id="@+id/BotonSemanal"
+        android:layout_width="190dp"
+        android:layout_height="195dp"
+        android:alpha="0"
+        app:cardElevation="20dp"
+
+        android:onClick="cardSemanal"
+        app:layout_constraintEnd_toEndOf="@id/cardTareasSemanales"
+        app:layout_constraintTop_toTopOf="@id/cardTareasSemanales"/>
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/cardTienda"

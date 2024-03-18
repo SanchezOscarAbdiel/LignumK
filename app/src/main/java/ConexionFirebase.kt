@@ -31,11 +31,19 @@ class ConexionFirebase {
                 // Imprimir los datos formateados
                 Log.d(TAG, "Datos del documento: $datosFormateados")
 
-                val archivo = File(context.getExternalFilesDir(null), "$coleccion.json")
-                val archivoEscritor = FileWriter(archivo)
-                archivoEscritor.write(datosFormateados) // Escribir los datos formateados en el archivo
-                archivoEscritor.close()
-                Log.d(TAG, "Ruta archivo ${archivo.path}")
+                if(valor == "semanal"){
+                    val archivo = File(context.getExternalFilesDir(null), "${coleccion}${valor}.json")
+                    val archivoEscritor = FileWriter(archivo)
+                    archivoEscritor.write(datosFormateados) // Escribir los datos formateados en el archivo
+                    archivoEscritor.close()
+                    Log.d(TAG, "Ruta archivo ${archivo.path}")
+                }else {
+                    val archivo = File(context.getExternalFilesDir(null), "$coleccion.json")
+                    val archivoEscritor = FileWriter(archivo)
+                    archivoEscritor.write(datosFormateados) // Escribir los datos formateados en el archivo
+                    archivoEscritor.close()
+                    Log.d(TAG, "Ruta archivo ${archivo.path}")
+                }
             }
             .addOnFailureListener { exception ->
                 Log.d(TAG, "get failed with ", exception)

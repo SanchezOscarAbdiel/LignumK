@@ -10,6 +10,7 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.Manifest
 import android.content.ContentValues.TAG
+import android.util.Base64
 import android.util.Log
 import android.view.View
 import android.widget.AdapterView
@@ -109,19 +110,31 @@ class PrimeraVez : AppCompatActivity() {
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), CAMERA_REQUEST_CODE)
-        } else {
-
         }
-
 
         pickMedia = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
             if (uri != null) {
+                val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                        Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+
+                // Comprueba la versión de Android
+                try {
+                    // Solicita el permiso persistente
+                    applicationContext.contentResolver.takePersistableUriPermission(uri, takeFlags)
+                } catch (e: SecurityException) {
+                    e.printStackTrace()
+                }
+
                 imgBtn.setImageURI(uri)
                 val inputStream = contentResolver.openInputStream(uri)
-                Pimg = inputStream?.readBytes()!!
+                val bitmap = BitmapFactory.decodeStream(inputStream)
+                val byteArrayOutputStream = ByteArrayOutputStream()
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream)
+                val byteArray = byteArrayOutputStream.toByteArray()
+                val encodedImage = Base64.encodeToString(byteArray, Base64.DEFAULT)
                 val sharedPref = this.getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
                 val editor = sharedPref.edit()
-                editor.putString("fotoPerfil", uri.toString())
+                editor.putString("fotoPerfil", encodedImage)
                 editor.putString("tipoFoto", "uri")
                 editor.apply()
 
@@ -129,6 +142,7 @@ class PrimeraVez : AppCompatActivity() {
 
             }
         }
+
 
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken(getString(R.string.default_web_client_id))
@@ -138,9 +152,10 @@ class PrimeraVez : AppCompatActivity() {
 
         //DescargaArchivos
         cFirebase.LeerDatos("Tareas", "tipo", "diaria", this)
+        cFirebase.LeerDatos("Tareas", "tipo", "semanal", this)
 
         //AsignaTareas
-        actividades.AsignarTareas(this) //Se lee el archivo y se extrae la tarea en el momento
+        actividades.AsignarTareas(this,"diaria","Tarea") //Se lee el archivo y se extrae la tarea en el momento
 
         rellenaSpin()
 
@@ -192,6 +207,7 @@ class PrimeraVez : AppCompatActivity() {
             jsonObject.put("Ddescanso", chipsSeleccionados)
             jsonObject.put("monedas", 0)
             jsonObject.put("racha",0)
+            jsonObject.put("respuestas","")
 
 // Convertir el objeto JSON a una cadena JSON
             val jsonDatos = jsonObject.toString()

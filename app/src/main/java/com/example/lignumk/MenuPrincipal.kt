@@ -45,6 +45,7 @@ import java.util.Calendar
 import java.util.concurrent.Executors
 import android.app.AlertDialog
 import android.net.Uri
+import android.util.Base64
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.view.animation.AccelerateDecelerateInterpolator
@@ -53,6 +54,7 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.carousel.CarouselSnapHelper
@@ -73,7 +75,7 @@ import kotlin.properties.Delegates
 val cFirebase = ConexionFirebase()
 val actividadesMP = Actividades()
 
-class MenuPrincipal : ComponentActivity() {
+class MenuPrincipal : AppCompatActivity() {
 
     private lateinit var workManager: WorkManager
     lateinit var tvTit: TextView
@@ -86,8 +88,9 @@ class MenuPrincipal : ComponentActivity() {
     lateinit var layoutTarea: RelativeLayout
     lateinit var tvNotificacion: TextView
     lateinit var btnEnviar: ExtendedFloatingActionButton
+    lateinit var btSemanal:Button
     lateinit var progressIndicator: LinearProgressIndicator
-   // lateinit var carouselRecycler: RecyclerView
+   private lateinit var carouselRecyclerView: RecyclerView
 
     //DiasSemana
     lateinit var IvLunes: ImageView
@@ -104,20 +107,43 @@ class MenuPrincipal : ComponentActivity() {
 
     private lateinit var googleSignInClient: GoogleSignInClient
     private lateinit var pickMedia: ActivityResultLauncher<PickVisualMediaRequest>
+    private lateinit var pickMedia2: ActivityResultLauncher<PickVisualMediaRequest>
     private lateinit var auth: FirebaseAuth
     private var firstRun by Delegates.notNull<Boolean>()
     val contsto = this
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_menu_principal)
         VerificaPrimeraVez()
-        val carouselRecycler = findViewById<RecyclerView>(R.id.carouselRecyclerView)
-        CarouselSnapHelper().attachToRecyclerView(carouselRecycler)
-        carouselRecycler.adapter = CarouselAdapter(images = getImages())
 
         val sharedPref = getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
         val FIRST_RUN = "first_run"
         firstRun = sharedPref.getBoolean(FIRST_RUN, true)
+
+        pickMedia2 = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+            if (uri != null) {
+                val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                        Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+
+                // Comprueba la versión de Android
+                try {
+                    // Solicita el permiso persistente
+                    applicationContext.contentResolver.takePersistableUriPermission(uri, takeFlags)
+                } catch (e: SecurityException) {
+                    e.printStackTrace()
+                }
+
+                val sharedPref = this.getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
+                val editor = sharedPref.edit()
+                editor.putString("fotoTarea", uri.toString())
+                editor.apply()
+
+                actividadesMP.popImagen(this,sharedPref.getString("tituloSemanal","")!!, sharedPref.getString("descripcionSemanal","")!!,sharedPref.getString("puntosSemanal","")!!,progressIndicator)//
+            } else {
+
+            }
+        }
 
         pickMedia = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
             if (uri != null) {
@@ -146,7 +172,7 @@ class MenuPrincipal : ComponentActivity() {
 
 
         workManager = WorkManager.getInstance(applicationContext)
-        setContentView(R.layout.activity_menu_principal)
+
 
         tvTit = findViewById(R.id.cTVtitulo)
         tvDescripcion = findViewById(R.id.cTVDescripcion)
@@ -159,6 +185,7 @@ class MenuPrincipal : ComponentActivity() {
         tvNotificacion = findViewById(R.id.cTVnoti)
         btnEnviar = findViewById(R.id.btnEnviarActividad)
         progressIndicator = findViewById(R.id.progress_indicator)
+        btSemanal = findViewById(R.id.BotonSemanal)
 
         IvLunes = findViewById(R.id.IvLunes)
         IvMartes = findViewById(R.id.IvMartes)
@@ -183,6 +210,7 @@ class MenuPrincipal : ComponentActivity() {
             cardUsuario(this)
             cardUsuario(this)
         }
+
     }
 
     fun cardUsuario(context: Context){
@@ -231,8 +259,9 @@ class MenuPrincipal : ComponentActivity() {
 
             if (tipo == "uri"){
                 if (foto != null) {
-                    val uri = Uri.parse(foto)
-                    fotoPerfil.setImageURI(uri)
+                    val decodedString = Base64.decode(foto, Base64.DEFAULT)
+                    val decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.size)
+                    fotoPerfil.setImageBitmap(decodedByte)
                 }
             }else{
                 val user = Firebase.auth.currentUser
@@ -282,14 +311,37 @@ class MenuPrincipal : ComponentActivity() {
         progreso.progress = diaDeLaSemana-1
         progressIndicator.visibility = View.GONE
     }
-    fun cardSemanal(){
+    fun cardSemanal(view: View){
+        val sharedPref = this.getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
+        val puntos = sharedPref.getString("puntos","")
+        val tituloSemanal = sharedPref.getString("tituloSemanal","")
+        val descripcionSemanal = sharedPref.getString("descripcionSemanal","")
+        val subtipoSemanal = sharedPref.getString("subtipoSemanal","")
 
+        when(subtipoSemanal){
+            "encuesta" -> actividadesMP.popEncuesta(contsto ,tituloSemanal!!,descripcionSemanal!!,puntos!!,progressIndicator)
+            "foto" -> {
+                val dialog = MaterialAlertDialogBuilder(this)
+                    .setTitle(tituloSemanal)
+                    .setMessage(descripcionSemanal)
+                    .setPositiveButton("Aceptar") { dialog, which ->
+
+
+
+
+                        pickMedia2.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                    }
+                    .show()
+
+                }
+        }
+
+        progressIndicator.visibility = View.GONE
     }
 
     fun getImages():List<String>{
         return listOf(
-            "https://images.wallpapersden.com/image/download/lumine-genshin-impact-4k_bGlmZ2uUmZqaraWkpJRmZW1lrWZuZ2U.jpg",
-            "https://www.pcgamesn.com/wp-content/sites/pcgamesn/2022/10/genshin-impact-nahida-materials.jpg"
+            "https://files.catbox.moe/q2s4ph.png"
         )
     }
 
@@ -304,7 +356,9 @@ class MenuPrincipal : ComponentActivity() {
         val sharedPref = this.getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
         val subtipo = sharedPref.getString("subtipo","")
         val puntos = sharedPref.getString("puntos","")
-
+        val tituloSemanal = sharedPref.getString("tituloSemanal","")
+        val descripcionSemanal = sharedPref.getString("descripcionSemanal","")
+        val subtipoSemanal = sharedPref.getString("subtipoSemanal","")
 
 // Muestra el indicador de progreso antes de iniciar la operación de larga duración
         var result =""
@@ -313,11 +367,47 @@ class MenuPrincipal : ComponentActivity() {
             "escritura" -> actividadesMP.popEscritura(contsto,tvTit.text.toString(), tvDescripcion.text.toString(),puntos.toString(),progressIndicator)
             "foto" -> pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
             "seleccionMultiple" -> actividadesMP.popSeleccionMultiple(contsto, tvTit.text.toString(), tvDescripcion.text.toString(), puntos.toString(),progressIndicator)
-            else -> Log.d("MiWorker", "Parámetro inválido")
+
+            else -> {
+                when(subtipoSemanal){
+                    "encuesta" -> actividadesMP.popEncuesta(contsto ,sharedPref.getString("tituloSemanal","")!!,sharedPref.getString("descripcionSemanal","")!!,sharedPref.getString("puntosSemanal","")!!,progressIndicator)
+                }
+            }
         }
 progressIndicator.visibility = View.GONE
     }
+    fun auxSemanal(context: MenuPrincipal, uid: String) {
+        val tvMonedas = (context as MenuPrincipal).findViewById<TextView>(R.id.tvMonedas)
+        val btnSemanal = (context as MenuPrincipal).findViewById<Button>(R.id.BotonSemanal)
+        btSemanal.visibility = View.GONE
 
+        Handler(Looper.getMainLooper()).postDelayed({
+            val jsonArray = actividadesMP.leeArchivo(context,"Usuarios")
+            var objetoBuscado: JSONObject? = null
+
+            for (i in 0 until jsonArray.length()) {
+                val objeto = jsonArray.getJSONObject(i)
+                if (objeto.getString("UID") == uid) {
+                    objetoBuscado = objeto
+                    break
+                }
+            }
+            if (objetoBuscado != null) {
+                Log.d("Objeto","Entra a objeto buscado")
+                tvMonedas.text = "$ ${objetoBuscado.getInt("monedas")}"
+            } else {
+                Log.d("MiApp", "No se encontró el usuario")
+            }
+        }, 5000)
+
+        val sharedPref = getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
+        val editor = sharedPref.edit()
+        editor.putString("tituloSemanal","Realizada!")
+        editor.apply()
+
+        val carouselRecyclerView: RecyclerView = findViewById(R.id.carouselRecyclerView)
+        carouselRecyclerView.adapter = CarouselAdapter(images = getImages(),"Realizada!")
+    }
     fun aux(context: Context,uid: String){
         val tvMonedas = (context as MenuPrincipal).findViewById<TextView>(R.id.tvMonedas)
         val tvNotificacion = context.findViewById<TextView>(R.id.cTVnoti)
@@ -422,7 +512,7 @@ progressIndicator.visibility = View.GONE
         val editor = sharedPref.edit()
 
         if (currentDay != lastOpenDay && firstRun == false) {
-            actMenu.AsignarTareas(this)
+            actMenu.AsignarTareas(this,"diaria","Tareas")
             editor.putString("actNotificacion","Tienes una nueva asignacion!")
             editor.putBoolean("actBotonEnviar",true)
 
@@ -431,6 +521,8 @@ progressIndicator.visibility = View.GONE
             //Reinicia dias de la semana si es lunes:
             val diaDeLaSemana = LocalDate.now().dayOfWeek.value
             if (diaDeLaSemana == 1) { // Si es lunes
+                btSemanal.alpha= 0f
+                btSemanal.isEnabled = true
                 val diasSemana: Map<String, String> =
                     mapOf("IvLunes" to "lunes", "IvMartes" to "martes", "IvMiercoles" to "miercoles",
                         "IvJueves" to "jueves","IvViernes" to "viernes","IvSabado" to "sabado",
@@ -440,6 +532,9 @@ progressIndicator.visibility = View.GONE
 
                 editor.putString("diasSemana", jsonString)
                 editor.apply()
+
+                //Tarea semanal
+                actMenu.AsignarTareas(this,"semanal","Tareassemanal")
 
             }else{
                 val dias = listOf("IvLunes", "IvMartes", "IvMiercoles", "IvJueves", "IvViernes", "IvSabado", "IvDomingo")
@@ -470,6 +565,8 @@ progressIndicator.visibility = View.GONE
         tvDescripcion.text = sharedPref.getString("descripcion", "")
         tvTit.text =  sharedPref.getString("titulo", "")
         btnEnviar.isEnabled = sharedPref.getBoolean("actBotonEnviar",true)
+        val carouselRecyclerView: RecyclerView = findViewById(R.id.carouselRecyclerView)
+        carouselRecyclerView.adapter = CarouselAdapter(images = getImages(),sharedPref.getString("tituloSemanal","")!!)
 
     }
 
@@ -486,7 +583,6 @@ progressIndicator.visibility = View.GONE
             editor.apply()
         }
     }
+
+
 }
-
-
-
