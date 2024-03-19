@@ -159,7 +159,7 @@
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintHorizontal_bias="0.0"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/CbNotificacion" />
+                    app:layout_constraintTop_toBottomOf="@+id/switchNotification" />
 
                 <TextView
                     android:id="@+id/textView7"
@@ -201,7 +201,6 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="56dp"
-                    android:onClick="SelectedChip"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/textView3">
@@ -271,8 +270,8 @@
 
                 </com.google.android.material.chip.ChipGroup>
 
-                <CheckBox
-                    android:id="@+id/CbNotificacion"
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/switchNotification"
                     style="@style/Widget.Material3.CheckedTextView"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"

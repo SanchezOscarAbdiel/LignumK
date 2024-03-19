@@ -2,6 +2,7 @@ package com.example.lignumk
 
 import ConexionFirebase
 import WorkManagerFile
+import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.util.Log
 import org.json.JSONArray
@@ -9,6 +10,7 @@ import java.io.File
 import java.io.FileReader
 import kotlin.random.Random
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
@@ -16,6 +18,7 @@ import android.os.Handler
 import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Base64
 import android.widget.EditText
 import androidx.work.Constraints
 import androidx.work.Data
@@ -31,30 +34,25 @@ import android.widget.ArrayAdapter
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.PickVisualMediaRequest
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.view.isVisible
 import com.google.ai.client.generativeai.GenerativeModel
-import com.google.ai.client.generativeai.type.GenerateContentResponse
 import com.google.ai.client.generativeai.type.content
-import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.json.JSONObject
-
+import java.io.ByteArrayOutputStream
 import java.io.FileNotFoundException
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
-
+import kotlin.math.min
+import kotlin.reflect.KClass
 val cFirebaseA = ConexionFirebase()
-val cPrimeraVez = PrimeraVez()
-val cSelectorFotos = SelectorFotos()
+@SuppressLint("StaticFieldLeak")
 val cMenuPrincipal = MenuPrincipal()
-
 class Actividades{
+    //######################################## OBJETOS
+
 
     fun leeArchivo(contexto: Context, nombre: String): JSONArray {
         val archivo = File(contexto.getExternalFilesDir(null), "$nombre.json")
@@ -63,68 +61,57 @@ class Actividades{
         return JSONArray(contenido)
     }
 
-    suspend fun samAItexto(contexto: Context,titulo: String, descripcion: String, respuesta: String,puntos:String,progressIndicator:LinearProgressIndicator) {
-        val generativeModel = GenerativeModel(
-            modelName = "gemini-pro",
+    private fun modeloIA(model: String): GenerativeModel {
+        return GenerativeModel(
+            modelName = model,
             apiKey = "AIzaSyDo5BH4jyyrGS28OIpMTdpTL-Zx3oVGKbI"
         )
+    }
+
+    private suspend fun samAItexto(contexto: Context, titulo: String, descripcion: String, respuesta: String, puntos:String, progressIndicator:LinearProgressIndicator) {
+        val generativeModel = modeloIA("gemini-pro")
         progressIndicator.visibility = View.VISIBLE
 
-        val Prompt = "A un trabajador de una empresa madedera se le asignó una actividad que lleva por titulo: " +
+        val prompt = "A un trabajador de una empresa madedera se le asignó una actividad que lleva por titulo: " +
                 "'${titulo}' teniendo que hacer lo siguiente:'${descripcion}'. esta fue su respuesta: " +
                 "'${respuesta}'. puntua su respuesta con un rango de 0 a '${puntos}' (escribe asi: -x/${puntos}-) " +
                 "y escribe un dato curioso corto corto acerca del tema y su respuesta"
-        val response = generativeModel.generateContent(Prompt)
 
-        response.text?.let { popRetroalimentacion(contexto, it, titulo,progressIndicator,"diaria") }
+        generativeModel.generateContent(prompt) .text?.let { popRetroalimentacion(contexto, it, titulo,progressIndicator,"diaria") }
     }
 
-    suspend fun samAIEncuesta(contexto: Context,titulo: String, descripcion: String, respuesta: String,puntos:String,progressIndicator:LinearProgressIndicator,tipo: String) {
-        val generativeModel = GenerativeModel(
-            modelName = "gemini-pro",
-            apiKey = "AIzaSyDo5BH4jyyrGS28OIpMTdpTL-Zx3oVGKbI"
-        )
+    private suspend fun samAIEncuesta(contexto: Context, titulo: String, descripcion: String, respuesta: String, puntos:String, progressIndicator:LinearProgressIndicator, tipo: String) {
+        val generativeModel = modeloIA("gemini-pro")
         progressIndicator.visibility = View.VISIBLE
 
-        val Prompt = "A un trabajador de una empresa madedera se le asignó una encuesta, teniendo que " +
+        val prompt = "A un trabajador de una empresa madedera se le asignó una encuesta, teniendo que " +
                 "responder las siguientes preguntas:'${descripcion}'. estas fueron sus respuestas: " +
                 "'${respuesta}'.escribe: -${puntos}/${puntos}-) " +
                 "y escribe un pequeño comentario constructivo en base a sus respuestas"
-        val response = generativeModel.generateContent(Prompt)
 
-        response.text?.let { popRetroalimentacion(contexto, it, titulo,progressIndicator,tipo) }
+        generativeModel.generateContent(prompt) .text?.let { popRetroalimentacion(contexto, it, titulo,progressIndicator,tipo) }
     }
 
-    suspend fun samAISeleccion(contexto: Context,titulo: String, descripcion: String, respuesta: String, opcionCorrecta:String ,puntos:String,progressIndicator: LinearProgressIndicator) {
+    private suspend fun samAISeleccion(contexto: Context, titulo: String, descripcion: String, respuesta: String, opcionCorrecta:String, puntos:String, progressIndicator: LinearProgressIndicator) {
         progressIndicator.visibility = View.VISIBLE
-        val generativeModel = GenerativeModel(
-            modelName = "gemini-pro",
-            apiKey = "AIzaSyDo5BH4jyyrGS28OIpMTdpTL-Zx3oVGKbI"
-        )
+        val generativeModel = modeloIA("gemini-pro")
 
-        val Prompt = "A un trabajador de una empresa madedera se le asignó una actividad que lleva " +
+        val prompt = "A un trabajador de una empresa madedera se le asignó una actividad que lleva " +
                 "por titulo: '${titulo}' teniendo que responder la siguiente pregunta de opcion multiple:" +
                 "'${descripcion}'. esta fue la respuesta que selecciono: '${respuesta}', la respuesta correcta " +
                 "a la pregunta es: ${opcionCorrecta}. puntua su respuesta con un rango de 0 a '${puntos}' " +
                 "(escribe asi: -x/${puntos}-) y escribe un dato curioso corto acerca del tema o su respuesta " +
                 "que incite el uso de equipo de seguridad a pesar de no querer"
 
-        val response = generativeModel.generateContent(Prompt)
-
-        response.text?.let { popRetroalimentacion(contexto, it, titulo,progressIndicator,"diaria") }
+        generativeModel.generateContent(prompt) .text?.let { popRetroalimentacion(contexto, it, titulo,progressIndicator,"diaria") }
     }
 
-    suspend fun samAIimagen(contexto: Context, titulo: String, descripcion: String,respuesta: String, puntos: String,progressIndicator: LinearProgressIndicator){
+    private suspend fun samAIimagen(contexto: Context, titulo: String, descripcion: String, respuesta: String, puntos: String, progressIndicator: LinearProgressIndicator){
         progressIndicator.visibility = View.VISIBLE
-        val generativeModel = GenerativeModel(
-            // Use a model that's applicable for your use case (see "Implement basic use cases" below)
-            modelName = "gemini-pro-vision",
-            // Access your API key as a Build Configuration variable (see "Set up your API key" above)
-            apiKey = "AIzaSyDo5BH4jyyrGS28OIpMTdpTL-Zx3oVGKbI"
-        )
-        val sharedPref = contexto.getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
-        val uriString = sharedPref.getString("fotoTarea", null)
-        if (uriString != null) {
+        val generativeModel = modeloIA("gemini-pro-vision")
+
+        val uriString = sharedPref(contexto, "fotoTarea", String::class.java)
+
             val uri = Uri.parse(uriString)
             val inputStream = contexto.contentResolver.openInputStream(uri)
             val bitmap = BitmapFactory.decodeStream(inputStream)
@@ -139,51 +126,89 @@ class Actividades{
                         "con un rango de 0 a '${puntos}' (escribe asi: -x/${puntos}-) y escribe algo corto e interesante acerca del tema o su respuesta")
             }
 
-            val response = generativeModel.generateContent(inputContent)
-            response.text?.let {
-                popRetroalimentacion(contexto, it, titulo,progressIndicator,"diaria")
-            }
-        }
+        generativeModel.generateContent(inputContent) .text?.let { popRetroalimentacion(contexto, it, titulo,progressIndicator,"diaria") }
 
     }
 
+    @Suppress("UNCHECKED_CAST")
+    fun <T> sharedPref(contexto: Context, variable: String, tipo: Class<T>): T? {
+        val sharedPref = contexto.getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
+        return when (tipo) {
+            String::class.java -> sharedPref.getString(variable, "") as T?
+            Int::class.java -> sharedPref.getInt(variable, 0) as T?
+            Boolean::class.java -> sharedPref.getBoolean(variable, true) as T?
+            else -> null
+        }
+    }
+
+    fun <T> saveSharedPref(contexto: Context, variable: String, valor: T) {
+        val sharedPref = contexto.getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
+        val editor = sharedPref.edit()
+
+        when (valor) {
+            is String -> editor.putString(variable, valor)
+            is Int -> editor.putInt(variable, valor)
+            is Boolean -> editor.putBoolean(variable, valor)
+            else -> throw IllegalArgumentException("Tipo no soportado")
+        }
+
+        editor.apply()
+    }
+
+    fun uriToBase64(contexto: Context,uri: Uri, shared:String){
+        val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+        try {
+            contexto.contentResolver.takePersistableUriPermission(uri, takeFlags)
+        } catch (e: SecurityException) {
+            e.printStackTrace()
+        }
+
+        val inputStream = contexto.contentResolver.openInputStream(uri)
+        var bitmap = BitmapFactory.decodeStream(inputStream)
+        bitmap = resizeToSquare(bitmap)
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.PNG, 50, byteArrayOutputStream)
+        val byteArray = byteArrayOutputStream.toByteArray()
+        val encodedImage = Base64.encodeToString(byteArray, Base64.DEFAULT)
+
+        saveSharedPref(contexto,shared,encodedImage)
+    }
+    fun resizeToSquare(bitmap: Bitmap): Bitmap {
+        val size = min(bitmap.width, bitmap.height)
+        val x = (bitmap.width - size) / 2
+        val y = (bitmap.height - size) / 2
+        return Bitmap.createBitmap(bitmap, x, y, size, size)
+    }
 
 
     fun AsignarTareas(contexto: Context, tipo:String, documento:String) {
         try {
 
             val json = leeArchivo(contexto, documento)
-
             // Generar un número aleatorio entre 0 y el tamaño del arreglo menos uno
             val indice = Random.nextInt(0, json.length())
-            // Obtener el elemento del arreglo json usando el índice
             val elemento = json.getJSONObject(indice)
-            // Hacer algo con el elemento, por ejemplo, imprimirlo
+
             cFirebaseA.LeerDatos("Tareas", "tipo", tipo, contexto)
 
-            val sharedPref = contexto.getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
-            // Obtener un editor de las SharedPreferences
-            val editor = sharedPref.edit()
             // Guardar el texto de la variable elemento como un valor asociado a una clave
             if(tipo == "diaria"){
-                editor.putString("descripcion", elemento.get("descripcion").toString())
-                editor.putString("titulo", elemento.get("titulo").toString())
-                editor.putString("subtipo", elemento.get("subtipo").toString())
-                editor.putString("puntos", elemento.get("puntos").toString())
+                saveSharedPref(contexto,"descripcion",elemento.get("descripcion").toString())
+                saveSharedPref(contexto,"titulo",elemento.get("titulo").toString())
+                saveSharedPref(contexto,"subtipo",elemento.get("subtipo").toString())
+                saveSharedPref(contexto,"puntos",elemento.get("puntos").toString())
             }else{
-                editor.putString("descripcionSemanal", elemento.get("descripcion").toString())
-                editor.putString("tituloSemanal", elemento.get("titulo").toString())
-                editor.putString("subtipoSemanal", elemento.get("subtipo").toString())
-                editor.putString("puntosSemanal", elemento.get("puntos").toString())
+                saveSharedPref(contexto,"descripcionSemanal",elemento.get("descripcion").toString())
+                saveSharedPref(contexto,"tituloSemanal",elemento.get("titulo").toString())
+                saveSharedPref(contexto,"subtipoSemanal",elemento.get("subtipo").toString())
+                saveSharedPref(contexto,"puntosSemanal",elemento.get("puntos").toString())
             }
 
-            // Guardar los cambios en el archivo
             Log.d("AsignarTareas", "Tareas asignadas")
-            editor.apply()
         } catch (e: FileNotFoundException) {
             Log.d("TAG", "Archivo no encontrado, reintentando en 5 segundos", e)
             Handler(Looper.getMainLooper()).postDelayed({
-                // Reintentar AsignarTareas después de 5 segundos
                 AsignarTareas(contexto, tipo,documento)
             }, 5000)
         }
@@ -224,10 +249,10 @@ class Actividades{
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false
     }
 
-    fun popRetroalimentacion(contexto: Context,result: String, titulo: String,progressIndicator: LinearProgressIndicator, tipo: String) {
+    private fun popRetroalimentacion(contexto: Context, result: String, titulo: String, progressIndicator: LinearProgressIndicator, tipo: String) {
         progressIndicator.visibility = View.GONE
         progressIndicator.visibility = View.GONE
-        val dialog =MaterialAlertDialogBuilder(contexto)
+        MaterialAlertDialogBuilder(contexto)
             .setTitle(titulo)
             .setMessage(result)
             .setPositiveButton("Reclamar puntos") { dialog, which ->
@@ -236,7 +261,6 @@ class Actividades{
                 val matchResult = regex.find(result)
                 val score = matchResult?.value
 
-// Ahora, score es "-10/15-", puedes procesarlo más para obtener solo el número
                 val number = score?.substring(1, score.indexOf("/"))  // Esto debería dar "10"
                 if (number != null) {
                     if (tipo == "diaria")
@@ -248,102 +272,89 @@ class Actividades{
             .show()
     }
 
-    private fun actualizaSemanal(contexto: Context, puntos: String, titulo: String) {
-        val IvCargaCircular = (contexto as MenuPrincipal).findViewById<CircularProgressIndicator>(R.id.CargaCircular)
-        IvCargaCircular.isVisible = true
-        val sharedPref = contexto.getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
-        var uid = sharedPref.getString("UID", "")
-
-        val json = actividadesMP.leeArchivo(contexto,"Usuarios")
+    @Suppress("UNCHECKED_CAST")
+    private fun<T : Any> objetoBuscado(json: JSONArray, identificador: String, claveBuscada: String, tipo: KClass<T>): T? {
         var objetoBuscado: JSONObject? = null
-        var monedas = 0
 
+        //Busca subJson
         for (i in 0 until json.length()) {
             val objeto = json.getJSONObject(i)
-            if (objeto.getString("UID") == uid) {
+            if (objeto.getString("UID") == identificador) {
                 objetoBuscado = objeto
                 break
             }
         }
-        if (objetoBuscado != null) {
-            Log.d("Objeto","Entra a objeto buscado")
-            monedas = objetoBuscado.getInt("monedas") + puntos.toInt()
-        } else {
-            Log.d("MiApp", "No se encontró el usuario")
+
+        //Busca clave
+        return when {
+            objetoBuscado != null -> {
+                Log.d("Objeto","Entra a objeto buscado")
+                when (tipo) {
+                    Int::class -> objetoBuscado.getInt(claveBuscada) as T?
+                    String::class -> objetoBuscado.getString(claveBuscada) as T?
+                    Boolean::class -> objetoBuscado.getBoolean(claveBuscada) as T?
+                    else -> null
+                }
+            }
+
+            else -> {
+                Log.d("MiApp", "No se encontró el usuario")
+                null
+            }
         }
-
-
-        val jsonObject = JSONObject()
-        jsonObject.put("coleccion", "Usuarios")
-        jsonObject.put("documento", uid)
-        jsonObject.put("monedas",monedas)
-        jsonObject.put("respuestas","Actividad: $titulo "+sharedPref.getString("respuestasSemanal",""))
-
-        val jsonDatos = jsonObject.toString()
-
-        cFirebaseA.UpdateData(jsonDatos)
-
-        cFirebaseA.LeerDatos("Usuarios","Puesto","Empleado",contexto)
-
-        cMenuPrincipal.auxSemanal(contexto,uid!!)
-
     }
 
-    fun actualizaActividad(contexto: Context,puntos: String){
-        val IvCargaCircular = (contexto as MenuPrincipal).findViewById<CircularProgressIndicator>(R.id.CargaCircular)
-        IvCargaCircular.isVisible = true
-        val sharedPref = contexto.getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
-        var uid = sharedPref.getString("UID", "")
-        val racha = sharedPref.getInt("racha", 0)
+    private fun actualizaSemanal(contexto: Context, puntos: String, titulo: String) {
+        val uid = sharedPref(contexto,"UID",String::class.java)
 
         val json = actividadesMP.leeArchivo(contexto,"Usuarios")
-        var objetoBuscado: JSONObject? = null
-        var monedas = 0
 
-        for (i in 0 until json.length()) {
-            val objeto = json.getJSONObject(i)
-            if (objeto.getString("UID") == uid) {
-                objetoBuscado = objeto
-                break
-            }
-        }
-        if (objetoBuscado != null) {
-            Log.d("Objeto","Entra a objeto buscado")
-            monedas = objetoBuscado.getInt("monedas") + puntos.toInt()
-        } else {
-            Log.d("MiApp", "No se encontró el usuario")
-        }
-
+        val monedas : Int =  objetoBuscado(json,uid!!,"monedas",Int::class)?.plus(puntos.toInt()) ?: 0
 
         val jsonObject = JSONObject()
         jsonObject.put("coleccion", "Usuarios")
         jsonObject.put("documento", uid)
         jsonObject.put("monedas",monedas)
-        jsonObject.put("racha",racha+1)
-
+        jsonObject.put("respuestas","Actividad: $titulo "+sharedPref(contexto,"respuestasSemanal",String::class.java))
         val jsonDatos = jsonObject.toString()
 
         cFirebaseA.UpdateData(jsonDatos)
 
         cFirebaseA.LeerDatos("Usuarios","Puesto","Empleado",contexto)
 
-        if (uid != null)
-            cMenuPrincipal.aux(contexto,uid)
+        cMenuPrincipal.auxSemanal(contexto,uid)
+    }
 
+    private fun actualizaActividad(contexto: Context, puntos: String){
+        val uid = sharedPref(contexto,"UID",String::class.java)
+        val racha = sharedPref(contexto,"racha",Int::class.java)
+
+        val json = actividadesMP.leeArchivo(contexto,"Usuarios")
+        val monedas : Int =  objetoBuscado(json,uid!!,"monedas",Int::class)?.plus(puntos.toInt()) ?: 0
+
+        val jsonObject = JSONObject()
+        jsonObject.put("coleccion", "Usuarios")
+        jsonObject.put("documento", uid)
+        jsonObject.put("monedas",monedas)
+        jsonObject.put("racha",racha!!+1)
+        val jsonDatos = jsonObject.toString()
+
+        cFirebaseA.UpdateData(jsonDatos)
+
+        cFirebaseA.LeerDatos("Usuarios","Puesto","Empleado",contexto)
+
+        cMenuPrincipal.aux(contexto,uid)
     }
 
     fun popImagen(contexto: Context, titulo: String, descripcion: String,puntos: String,progressIndicator: LinearProgressIndicator){
         val inflater = LayoutInflater.from(contexto)
         val view = inflater.inflate(R.layout.activity_selector_fotos, null)
-        var texto = view.findViewById<EditText>(R.id.myEditText)
-        var imagen = view.findViewById<ImageView>(R.id.myImageButton)
-        val im = ImageView(contexto)
+        val texto = view.findViewById<EditText>(R.id.myEditText)
+        val imagen = view.findViewById<ImageView>(R.id.myImageButton)
 
-        val sharedPref = contexto.getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
-        val uri = Uri.parse(sharedPref.getString("fotoTarea",""))
-
+        val uri = Uri.parse(sharedPref(contexto,"fotoTarea",String::class.java))
         imagen.setImageURI(uri)
-// Crear el dialogo
+
         val dialog = MaterialAlertDialogBuilder(contexto)
             .setTitle(titulo)
             .setMessage(descripcion)
@@ -353,42 +364,33 @@ class Actividades{
                 CoroutineScope(Dispatchers.Main).launch {
                     samAIimagen(contexto,titulo,descripcion,texto.text.toString(), puntos,progressIndicator)
                 }
+
             }
             .setNegativeButton("Cancelar", null)
             .show()
 
         texto.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
-                // Habilitar el botón de acción positiva solo si el EditText no está vacío
                 dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = !s.isNullOrEmpty()
             }
 
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
         })
-
-// Mostrar el dialogo
         dialog.show()
 
-// Deshabilitar inicialmente el botón de acción positiva
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false
     }
+
     fun popEncuesta(contexto: Context, titulo: String, descripcion: String, puntos: String,progressIndicator: LinearProgressIndicator){
         val dialogView = LayoutInflater.from(contexto).inflate(R.layout.dialog_survey, null)
         val container = dialogView.findViewById<LinearLayout>(R.id.container)
 
-        val json = objBuscado(contexto, "Tareassemanal","titulo",titulo)
-        val opciones = ArrayList<String>()
-
-        json!!.keys().forEach { key ->
-            if (key.startsWith("pregunta")) {
-                opciones.add(json.getString(key))
-            }
-        }
+        val (_, opciones) = jsonBuscado(contexto, "Tareassemanal","titulo",titulo,"pregunta") ?: Pair(null, null)
 
         val editTexts = ArrayList<EditText>()
 
-        for (opcion in opciones) {
+        for (opcion in opciones!!) {
             val questionTextView = TextView(contexto)
             questionTextView.text = opcion
             container.addView(questionTextView)
@@ -398,7 +400,7 @@ class Actividades{
             container.addView(answerEditText)
         }
 
-        val dialog = MaterialAlertDialogBuilder(contexto)
+        MaterialAlertDialogBuilder(contexto)
             .setTitle(titulo)
             .setMessage(descripcion)
             .setView(dialogView)
@@ -407,10 +409,7 @@ class Actividades{
             }
             .setPositiveButton("Aceptar") { dialog, which ->
                 val answers = editTexts.map { it.text.toString() }
-                val sharedPref = contexto.getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
-                val editor = sharedPref.edit()
-                editor.putString("respuestasSemanal",answers.toString())
-                editor.apply()
+                saveSharedPref(contexto,"respuestasSemanal",answers.toString())
                 CoroutineScope(Dispatchers.Main).launch {
                         samAIEncuesta(contexto, titulo, opciones.toString(), answers.toString(), puntos, progressIndicator,"semanal")
                 }
@@ -420,22 +419,13 @@ class Actividades{
     }
 
     fun popSeleccionMultiple(contexto: Context,titulo: String, descripcion: String,puntos: String,progressIndicator: LinearProgressIndicator){
-        val json = objBuscado(contexto, "Tareas","titulo",titulo)
-        Log.d("json", "Json seleccion: $json")
-        val opciones = ArrayList<String>()
+        val (json, opciones) = jsonBuscado(contexto, "Tareas","titulo",titulo,"opcion") ?: Pair(null, null)
 
-        json!!.keys().forEach { key ->
-            if (key.startsWith("opcion")) {
-                opciones.add(json.getString(key))
-            }
-        }
-        Log.d("json", "array seleccion: $opciones")
-
-        val adapter = object : ArrayAdapter<String>(contexto, R.layout.list_item, opciones) {
+        val adapter = object : ArrayAdapter<String>(contexto, R.layout.list_item, opciones!!) {
             override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
                 val view = convertView ?: LayoutInflater.from(contexto).inflate(R.layout.list_item, parent, false)
                 val textView = view.findViewById<TextView>(R.id.option_text)
-                textView.text = opciones[position]
+                textView.text = opciones!![position]
                 return view
             }
         }
@@ -445,17 +435,19 @@ class Actividades{
             .setAdapter(adapter) { dialog, which ->
                 val opcionSeleccionada = opciones[which]
                 CoroutineScope(Dispatchers.Main).launch {
-                    samAISeleccion(contexto,titulo,descripcion,opcionSeleccionada,json.getString("correcta"),puntos,progressIndicator)
+                    samAISeleccion(contexto,titulo,descripcion,opcionSeleccionada,json!!.getString("correcta"),puntos,progressIndicator)
                     dialog.cancel()
                     }
             }
         dialog.show()
     }
 
-    fun objBuscado(contexto: Context, coleccion: String, campo:String, buscado:String): JSONObject? {
+    private fun jsonBuscado(contexto: Context, coleccion: String, campo:String, buscado:String, llave:String): Pair<JSONObject?, ArrayList<String>?>? {
         val jsonArray = leeArchivo(contexto,coleccion)
         var objetoBuscado: JSONObject? = null
+        var opciones: ArrayList<String>? = null
 
+        //Busca subJson
         for (i in 0 until jsonArray.length()) {
             val objeto = jsonArray.getJSONObject(i)
             if (objeto.getString(campo) == buscado) {
@@ -463,15 +455,23 @@ class Actividades{
                 break
             }
         }
+        //Busca clave
         if (objetoBuscado != null) {
             Log.d("Objeto","Entra a objeto buscado")
-            return objetoBuscado
+            opciones = ArrayList<String>()
+            objetoBuscado.keys().forEach { key ->
+                if (key.startsWith(llave)) {
+                    opciones.add(objetoBuscado.getString(key))
+                }
+            }
         } else {
-            return null
+            Log.d("MiApp", "No se encontró el usuario")
         }
+        return if (objetoBuscado != null || opciones != null) Pair(objetoBuscado, opciones) else null
     }
 
-    fun oneTimeR(contexto: Context, delay: Long,para: String){
+
+    /*fun oneTimeR(contexto: Context, delay: Long,para: String){
         lateinit var workManager: WorkManager
         workManager = WorkManager.getInstance(contexto)
         Log.d("Parametro", "Parametro oneTimeR: ${para}")
@@ -484,7 +484,7 @@ class Actividades{
 
     }
 
-    fun SincronizaTareas(): Long {
+    fun sincronizaTareas(): Long {
         val currentTime = Calendar.getInstance().get(Calendar.HOUR_OF_DAY) // Hora actual
         val desiredHour = 16 // Hora deseada (7 AM)
         val desiredMinute = 8 // Minuto deseado (35 minutos)
@@ -495,7 +495,6 @@ class Actividades{
 
         return delay
     }
-
 
     fun periodicRTareas(contexto: Context){
         val miPeriodicWorkRequest = PeriodicWorkRequest.Builder(WorkManagerFile::class.java, 15, TimeUnit.MINUTES)
@@ -512,13 +511,5 @@ class Actividades{
             .build()
         WorkManager.getInstance(contexto).enqueue(miPeriodicWorkRequest)
     }
-
-    fun EscribirTareas() {
-        // Aquí puedes escribir el código para escribir las tareas
-    }
-
-    fun BorrarTareas() {
-        // Aquí puedes escribir el código para borrar las tareas
-    }
-
+*/
 }
