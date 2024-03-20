@@ -82,6 +82,7 @@ dependencies {
     implementation("androidx.activity:activity-ktx:1.8.2")
 
     implementation ("com.github.bumptech.glide:glide:4.11.0")
+    annotationProcessor ("com.github.bumptech.glide:compiler:4.12.0")
 
     //Firebase
     implementation(platform("com.google.firebase:firebase-bom:32.7.2"))

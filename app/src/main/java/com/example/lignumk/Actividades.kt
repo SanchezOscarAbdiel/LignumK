@@ -1,7 +1,6 @@
 package com.example.lignumk
 
 import ConexionFirebase
-import WorkManagerFile
 import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.util.Log
@@ -20,12 +19,6 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.util.Base64
 import android.widget.EditText
-import androidx.work.Constraints
-import androidx.work.Data
-import androidx.work.NetworkType
-import androidx.work.OneTimeWorkRequest
-import androidx.work.PeriodicWorkRequest
-import androidx.work.WorkManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import android.view.LayoutInflater
 import android.view.View
@@ -34,6 +27,7 @@ import android.widget.ArrayAdapter
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import com.example.lignumk.databinding.ActivityMenuPrincipalBinding
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.content
 import com.google.android.material.progressindicator.LinearProgressIndicator
@@ -43,8 +37,6 @@ import kotlinx.coroutines.launch
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.io.FileNotFoundException
-import java.util.Calendar
-import java.util.concurrent.TimeUnit
 import kotlin.math.min
 import kotlin.reflect.KClass
 val cFirebaseA = ConexionFirebase()
@@ -52,6 +44,10 @@ val cFirebaseA = ConexionFirebase()
 val cMenuPrincipal = MenuPrincipal()
 class Actividades{
     //######################################## OBJETOS
+
+    fun log(message: String, fileName: String) {
+        Log.d(fileName, message)
+    }
 
 
     fun leeArchivo(contexto: Context, nombre: String): JSONArray {
@@ -68,7 +64,7 @@ class Actividades{
         )
     }
 
-    private suspend fun samAItexto(contexto: Context, titulo: String, descripcion: String, respuesta: String, puntos:String, progressIndicator:LinearProgressIndicator) {
+    private suspend fun samAItexto(contexto: Context, titulo: String, descripcion: String, respuesta: String, puntos:String, progressIndicator:LinearProgressIndicator, binding: ActivityMenuPrincipalBinding) {
         val generativeModel = modeloIA("gemini-pro")
         progressIndicator.visibility = View.VISIBLE
 
@@ -77,10 +73,10 @@ class Actividades{
                 "'${respuesta}'. puntua su respuesta con un rango de 0 a '${puntos}' (escribe asi: -x/${puntos}-) " +
                 "y escribe un dato curioso corto corto acerca del tema y su respuesta"
 
-        generativeModel.generateContent(prompt) .text?.let { popRetroalimentacion(contexto, it, titulo,progressIndicator,"diaria") }
+        generativeModel.generateContent(prompt) .text?.let { popRetroalimentacion(contexto, it, titulo,progressIndicator,"diaria", binding) }
     }
 
-    private suspend fun samAIEncuesta(contexto: Context, titulo: String, descripcion: String, respuesta: String, puntos:String, progressIndicator:LinearProgressIndicator, tipo: String) {
+    private suspend fun samAIEncuesta(contexto: Context, titulo: String, descripcion: String, respuesta: String, puntos:String, progressIndicator:LinearProgressIndicator, tipo: String, binding: ActivityMenuPrincipalBinding) {
         val generativeModel = modeloIA("gemini-pro")
         progressIndicator.visibility = View.VISIBLE
 
@@ -89,10 +85,10 @@ class Actividades{
                 "'${respuesta}'.escribe: -${puntos}/${puntos}-) " +
                 "y escribe un pequeño comentario constructivo en base a sus respuestas"
 
-        generativeModel.generateContent(prompt) .text?.let { popRetroalimentacion(contexto, it, titulo,progressIndicator,tipo) }
+        generativeModel.generateContent(prompt) .text?.let { popRetroalimentacion(contexto, it, titulo,progressIndicator,tipo, binding) }
     }
 
-    private suspend fun samAISeleccion(contexto: Context, titulo: String, descripcion: String, respuesta: String, opcionCorrecta:String, puntos:String, progressIndicator: LinearProgressIndicator) {
+    private suspend fun samAISeleccion(contexto: Context, titulo: String, descripcion: String, respuesta: String, opcionCorrecta:String, puntos:String, progressIndicator: LinearProgressIndicator, binding: ActivityMenuPrincipalBinding) {
         progressIndicator.visibility = View.VISIBLE
         val generativeModel = modeloIA("gemini-pro")
 
@@ -103,10 +99,13 @@ class Actividades{
                 "(escribe asi: -x/${puntos}-) y escribe un dato curioso corto acerca del tema o su respuesta " +
                 "que incite el uso de equipo de seguridad a pesar de no querer"
 
-        generativeModel.generateContent(prompt) .text?.let { popRetroalimentacion(contexto, it, titulo,progressIndicator,"diaria") }
+        generativeModel.generateContent(prompt) .text?.let { popRetroalimentacion(contexto, it, titulo,progressIndicator,"diaria", binding) }
     }
 
-    private suspend fun samAIimagen(contexto: Context, titulo: String, descripcion: String, respuesta: String, puntos: String, progressIndicator: LinearProgressIndicator){
+    private suspend fun samAIimagen(contexto: Context, titulo: String, descripcion: String, respuesta: String, puntos: String, progressIndicator: LinearProgressIndicator, binding: ActivityMenuPrincipalBinding, tipo: String){
+        Log.d(contexto.getString(R.string.actividades), "samImage llega con con ${titulo}, ${descripcion}" +
+                ", ${puntos}, $tipo")
+
         progressIndicator.visibility = View.VISIBLE
         val generativeModel = modeloIA("gemini-pro-vision")
 
@@ -123,10 +122,14 @@ class Actividades{
                 text("A un trabajador de una empresa madedera se le asignó una actividad que lleva por titulo: " +
                         "'${titulo}' teniendo que hacer lo siguiente:'${descripcion}'. esta fue su respuesta: " +
                         "'${respuesta}' ademas de adjuntar esta imagen. Analiza su imagen y puntuala dependiendo si coincide con lo requerido " +
-                        "con un rango de 0 a '${puntos}' (escribe asi: -x/${puntos}-) y escribe algo corto e interesante acerca del tema o su respuesta")
+                        "con un rango de 0 a '${puntos}' escribe asi: -x/${puntos}- y escribe algo corto e interesante acerca del tema o su respuesta")
             }
 
-        generativeModel.generateContent(inputContent) .text?.let { popRetroalimentacion(contexto, it, titulo,progressIndicator,"diaria") }
+        generativeModel.generateContent(inputContent) .text?.let {
+            Log.d(contexto.getString(R.string.actividades), "samImage -> popRetroalimentacion  \n" +
+                    "con ${titulo}, ${puntos}, $tipo, \n $it")
+
+            popRetroalimentacion(contexto, it, titulo,progressIndicator,tipo,binding) }
 
     }
 
@@ -137,6 +140,7 @@ class Actividades{
             String::class.java -> sharedPref.getString(variable, "") as T?
             Int::class.java -> sharedPref.getInt(variable, 0) as T?
             Boolean::class.java -> sharedPref.getBoolean(variable, true) as T?
+            Long::class.java -> sharedPref.getLong(variable, 0) as T?
             else -> null
         }
     }
@@ -149,6 +153,7 @@ class Actividades{
             is String -> editor.putString(variable, valor)
             is Int -> editor.putInt(variable, valor)
             is Boolean -> editor.putBoolean(variable, valor)
+            is Long -> editor.putLong(variable, valor)
             else -> throw IllegalArgumentException("Tipo no soportado")
         }
 
@@ -213,7 +218,7 @@ class Actividades{
             }, 5000)
         }
     }
-    fun popEscritura(contexto: Context, titulo: String, descripcion: String, puntos: String,progressIndicator: LinearProgressIndicator){
+    fun popEscritura(contexto: Context, titulo: String, descripcion: String, puntos: String,progressIndicator: LinearProgressIndicator, binding: ActivityMenuPrincipalBinding){
         val editText = EditText(contexto)
         val dialog =MaterialAlertDialogBuilder(contexto)
             .setTitle(titulo)
@@ -226,7 +231,7 @@ class Actividades{
                 val inputText = editText.text.toString()
 
                 CoroutineScope(Dispatchers.Main).launch {
-                    samAItexto(contexto,titulo, descripcion, inputText, puntos,progressIndicator)
+                    samAItexto(contexto,titulo, descripcion, inputText, puntos,progressIndicator, binding)
                 }
             }
             .show()
@@ -249,8 +254,10 @@ class Actividades{
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false
     }
 
-    private fun popRetroalimentacion(contexto: Context, result: String, titulo: String, progressIndicator: LinearProgressIndicator, tipo: String) {
-        progressIndicator.visibility = View.GONE
+    private fun popRetroalimentacion(contexto: Context, result: String, titulo: String, progressIndicator: LinearProgressIndicator, tipo: String, binding: ActivityMenuPrincipalBinding) {
+        Log.d(contexto.getString(R.string.actividades), "popRetroalimentacion llega con " +
+                " ${result},\n ${titulo}, $tipo")
+
         progressIndicator.visibility = View.GONE
         MaterialAlertDialogBuilder(contexto)
             .setTitle(titulo)
@@ -263,17 +270,25 @@ class Actividades{
 
                 val number = score?.substring(1, score.indexOf("/"))  // Esto debería dar "10"
                 if (number != null) {
-                    if (tipo == "diaria")
-                        actualizaActividad(contexto, number)
-                    else
-                        actualizaSemanal(contexto,number, titulo)
+                    if (tipo == "diaria") {
+                        Log.d(
+                            contexto.getString(R.string.actividades),
+                            "popRetroalimentacion -> actualizaActividad" +
+                                    "con diaria $number"
+                        )
+                        actualizaActividad(contexto, number, binding)
+                    }else {
+                        Log.d(contexto.getString(R.string.actividades), "popRetroalimentacion -> actualizaActividad" +
+                                "con semanal ${number}, $titulo")
+                        actualizaSemanal(contexto, number, titulo, binding)
+                    }
                 }
             }
             .show()
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun<T : Any> objetoBuscado(json: JSONArray, identificador: String, claveBuscada: String, tipo: KClass<T>): T? {
+    fun<T : Any> objetoBuscado(json: JSONArray, identificador: String, claveBuscada: String, tipo: KClass<T>): T? {
         var objetoBuscado: JSONObject? = null
 
         //Busca subJson
@@ -304,7 +319,10 @@ class Actividades{
         }
     }
 
-    private fun actualizaSemanal(contexto: Context, puntos: String, titulo: String) {
+    private fun actualizaSemanal(contexto: Context, puntos: String, titulo: String, binding: ActivityMenuPrincipalBinding) {
+        Log.d(contexto.getString(R.string.actividades), "Llega a actualizaActividad" +
+                "con semanal ${puntos}, $titulo")
+
         val uid = sharedPref(contexto,"UID",String::class.java)
 
         val json = actividadesMP.leeArchivo(contexto,"Usuarios")
@@ -322,10 +340,12 @@ class Actividades{
 
         cFirebaseA.LeerDatos("Usuarios","Puesto","Empleado",contexto)
 
-        cMenuPrincipal.auxSemanal(contexto,uid)
+        Log.d(contexto.getString(R.string.actividades)+"->"+contexto.getString(R.string.menuPrincipal),
+            "actualizaActividad -> auxSemanal " + "con ${uid}")
+        cMenuPrincipal.auxSemanal(contexto,uid, binding)
     }
 
-    private fun actualizaActividad(contexto: Context, puntos: String){
+    private fun actualizaActividad(contexto: Context, puntos: String,binding: ActivityMenuPrincipalBinding){
         val uid = sharedPref(contexto,"UID",String::class.java)
         val racha = sharedPref(contexto,"racha",Int::class.java)
 
@@ -343,10 +363,10 @@ class Actividades{
 
         cFirebaseA.LeerDatos("Usuarios","Puesto","Empleado",contexto)
 
-        cMenuPrincipal.aux(contexto,uid)
+        cMenuPrincipal.aux(contexto,uid, binding)
     }
 
-    fun popImagen(contexto: Context, titulo: String, descripcion: String,puntos: String,progressIndicator: LinearProgressIndicator){
+    fun popImagen(contexto: Context, titulo: String, descripcion: String,puntos: String,progressIndicator: LinearProgressIndicator,binding: ActivityMenuPrincipalBinding,tipo: String){
         val inflater = LayoutInflater.from(contexto)
         val view = inflater.inflate(R.layout.activity_selector_fotos, null)
         val texto = view.findViewById<EditText>(R.id.myEditText)
@@ -362,7 +382,9 @@ class Actividades{
             .setPositiveButton("Aceptar") { dialog, which ->
 
                 CoroutineScope(Dispatchers.Main).launch {
-                    samAIimagen(contexto,titulo,descripcion,texto.text.toString(), puntos,progressIndicator)
+                    Log.d(contexto.getString(R.string.actividades), "popImage con ${titulo}, ${descripcion}" +
+                            ", ${puntos}, $tipo")
+                    samAIimagen(contexto,titulo,descripcion,texto.text.toString(), puntos,progressIndicator, binding, tipo)
                 }
 
             }
@@ -382,7 +404,7 @@ class Actividades{
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false
     }
 
-    fun popEncuesta(contexto: Context, titulo: String, descripcion: String, puntos: String,progressIndicator: LinearProgressIndicator){
+    fun popEncuesta(contexto: Context, titulo: String, descripcion: String, puntos: String,progressIndicator: LinearProgressIndicator,binding: ActivityMenuPrincipalBinding){
         val dialogView = LayoutInflater.from(contexto).inflate(R.layout.dialog_survey, null)
         val container = dialogView.findViewById<LinearLayout>(R.id.container)
 
@@ -411,14 +433,14 @@ class Actividades{
                 val answers = editTexts.map { it.text.toString() }
                 saveSharedPref(contexto,"respuestasSemanal",answers.toString())
                 CoroutineScope(Dispatchers.Main).launch {
-                        samAIEncuesta(contexto, titulo, opciones.toString(), answers.toString(), puntos, progressIndicator,"semanal")
+                        samAIEncuesta(contexto, titulo, opciones.toString(), answers.toString(), puntos, progressIndicator,"semanal", binding)
                 }
             }
             .show()
 
     }
 
-    fun popSeleccionMultiple(contexto: Context,titulo: String, descripcion: String,puntos: String,progressIndicator: LinearProgressIndicator){
+    fun popSeleccionMultiple(contexto: Context,titulo: String, descripcion: String,puntos: String,progressIndicator: LinearProgressIndicator, binding: ActivityMenuPrincipalBinding){
         val (json, opciones) = jsonBuscado(contexto, "Tareas","titulo",titulo,"opcion") ?: Pair(null, null)
 
         val adapter = object : ArrayAdapter<String>(contexto, R.layout.list_item, opciones!!) {
@@ -435,7 +457,7 @@ class Actividades{
             .setAdapter(adapter) { dialog, which ->
                 val opcionSeleccionada = opciones[which]
                 CoroutineScope(Dispatchers.Main).launch {
-                    samAISeleccion(contexto,titulo,descripcion,opcionSeleccionada,json!!.getString("correcta"),puntos,progressIndicator)
+                    samAISeleccion(contexto,titulo,descripcion,opcionSeleccionada,json!!.getString("correcta"),puntos,progressIndicator, binding)
                     dialog.cancel()
                     }
             }

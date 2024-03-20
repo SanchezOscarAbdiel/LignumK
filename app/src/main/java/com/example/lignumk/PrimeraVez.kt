@@ -4,6 +4,8 @@ import androidx.appcompat.app.AppCompatActivity
 import android.content.Intent
 import android.graphics.BitmapFactory
 import android.content.ContentValues.TAG
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.View
 import android.widget.AdapterView
@@ -116,9 +118,11 @@ class PrimeraVez : AppCompatActivity() {
                     actividades.saveSharedPref(this@PrimeraVez, "diasSemana",jsonString)
                     actividades.saveSharedPref(this@PrimeraVez, "racha",0)
 
-                    val intent = Intent(this@PrimeraVez, MenuPrincipal::class.java)
-                    startActivity(intent)
-                    this@PrimeraVez.finish()
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        val intent = Intent(this@PrimeraVez, MenuPrincipal::class.java)
+                        startActivity(intent)
+                        this@PrimeraVez.finish()
+                    },3000)
                 } catch (e: Exception) {
                     Log.e(TAG, "Error al actualizar los datos en Firebase", e)
                 }

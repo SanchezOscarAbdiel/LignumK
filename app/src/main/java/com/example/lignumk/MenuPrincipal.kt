@@ -1,201 +1,71 @@
 package com.example.lignumk
-
 import android.os.Bundle
-import androidx.activity.ComponentActivity
-//Clases
 import ConexionFirebase
 import android.animation.LayoutTransition
-import android.animation.ObjectAnimator
-
-// Importar la clase Context
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
-import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import android.text.Layout
 import android.transition.AutoTransition
-import android.transition.Transition
 import android.transition.TransitionManager
 import android.util.Log
 import android.view.View
-import android.widget.Button
 import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.ProgressBar
-import android.widget.RelativeLayout
-import android.widget.TextView
-import android.widget.Toast
 import androidx.annotation.RequiresApi
-import androidx.work.WorkManager
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
-import java.io.ByteArrayOutputStream
 import java.io.FileNotFoundException
-import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneId
 import java.util.Calendar
-import java.util.concurrent.Executors
-import android.app.AlertDialog
-import android.net.Uri
 import android.util.Base64
-import android.view.LayoutInflater
-import android.view.ViewGroup
-import android.view.animation.AccelerateDecelerateInterpolator
+import android.widget.Button
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.card.MaterialCardView
-import com.google.android.material.carousel.CarouselSnapHelper
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-import com.google.android.material.progressindicator.CircularProgressIndicator
+import com.bumptech.glide.Glide
+import com.example.lignumk.databinding.ActivityMenuPrincipalBinding
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.common.reflect.TypeToken
 import com.google.gson.Gson
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import org.json.JSONObject
-import kotlin.concurrent.thread
+import java.lang.NullPointerException
 import kotlin.properties.Delegates
-
 
 val cFirebase = ConexionFirebase()
 val actividadesMP = Actividades()
 
 class MenuPrincipal : AppCompatActivity() {
 
-    private lateinit var workManager: WorkManager
-    lateinit var tvTit: TextView
-    lateinit var tvDescripcion: TextView
-    lateinit var tvMonedas: TextView
-    lateinit var layout: LinearLayout
-    lateinit var nombreUsuario: TextView
-    lateinit var fotoPerfil: ImageView
-    lateinit var progreso: ProgressBar
-    lateinit var layoutTarea: RelativeLayout
-    lateinit var tvNotificacion: TextView
-    lateinit var btnEnviar: ExtendedFloatingActionButton
-    lateinit var btSemanal:Button
-    lateinit var progressIndicator: LinearProgressIndicator
-   private lateinit var carouselRecyclerView: RecyclerView
 
-    //DiasSemana
-    lateinit var IvLunes: ImageView
-    lateinit var IvMartes: ImageView
-    lateinit var IvMiercoles: ImageView
-    lateinit var IvJueves: ImageView
-    lateinit var IvViernes: ImageView
-    lateinit var IvSabado: ImageView
-    lateinit var IvDomingo: ImageView
 
     val actMenu = Actividades()
-    private val PREFS_NAME = "MyPrefs"
     private val LAST_OPEN_DATE = "lastOpenDate"
 
     private lateinit var googleSignInClient: GoogleSignInClient
     private lateinit var pickMedia: ActivityResultLauncher<PickVisualMediaRequest>
-    private lateinit var pickMedia2: ActivityResultLauncher<PickVisualMediaRequest>
-    private lateinit var auth: FirebaseAuth
     private var firstRun by Delegates.notNull<Boolean>()
     val contsto = this
+    private lateinit var binding: ActivityMenuPrincipalBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_menu_principal)
+        binding = ActivityMenuPrincipalBinding.inflate(layoutInflater)
+        setContentView(binding.root)
         VerificaPrimeraVez()
+        setDiasSemana(this)
+        binding.CargaCircular.isVisible = false
+        binding.progressIndicator.visibility = View.GONE
+        binding.BotonSemanal.isEnabled = actividadesMP.sharedPref(this, "BotonSemanal",Boolean::class.java)!!
 
-        val sharedPref = getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
-        val FIRST_RUN = "first_run"
-        firstRun = sharedPref.getBoolean(FIRST_RUN, true)
-
-        pickMedia2 = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-            if (uri != null) {
-                val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION or
-                        Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-
-                // Comprueba la versión de Android
-                try {
-                    // Solicita el permiso persistente
-                    applicationContext.contentResolver.takePersistableUriPermission(uri, takeFlags)
-                } catch (e: SecurityException) {
-                    e.printStackTrace()
-                }
-
-                val sharedPref = this.getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
-                val editor = sharedPref.edit()
-                editor.putString("fotoTarea", uri.toString())
-                editor.apply()
-
-                actividadesMP.popImagen(this,sharedPref.getString("tituloSemanal","")!!, sharedPref.getString("descripcionSemanal","")!!,sharedPref.getString("puntosSemanal","")!!,progressIndicator)//
-            } else {
-
-            }
-        }
-
-        pickMedia = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-            if (uri != null) {
-                val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION or
-                        Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-
-                // Comprueba la versión de Android
-                try {
-                    // Solicita el permiso persistente
-                    applicationContext.contentResolver.takePersistableUriPermission(uri, takeFlags)
-                } catch (e: SecurityException) {
-                    e.printStackTrace()
-                }
-
-                val sharedPref = this.getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
-                val editor = sharedPref.edit()
-                editor.putString("fotoTarea", uri.toString())
-                editor.apply()
-
-                val puntos = sharedPref.getString("puntos","")
-                actividadesMP.popImagen(this,tvTit.text.toString(), tvDescripcion.text.toString(),puntos.toString(),progressIndicator)//
-            } else {
-
-            }
-        }
-
-
-        workManager = WorkManager.getInstance(applicationContext)
-
-
-        tvTit = findViewById(R.id.cTVtitulo)
-        tvDescripcion = findViewById(R.id.cTVDescripcion)
-        layout = findViewById(R.id.lay)
-        nombreUsuario = findViewById(R.id.nombreUsuario)
-        tvMonedas = findViewById(R.id.tvMonedas)
-        fotoPerfil = findViewById(R.id.fotoPerfil)
-        progreso = findViewById(R.id.progressBar)
-        layoutTarea = findViewById(R.id.layoutTarea)
-        tvNotificacion = findViewById(R.id.cTVnoti)
-        btnEnviar = findViewById(R.id.btnEnviarActividad)
-        progressIndicator = findViewById(R.id.progress_indicator)
-        btSemanal = findViewById(R.id.BotonSemanal)
-
-        IvLunes = findViewById(R.id.IvLunes)
-        IvMartes = findViewById(R.id.IvMartes)
-        IvMiercoles = findViewById(R.id.IvMiercoles)
-        IvJueves = findViewById(R.id.IvJueves)
-        IvViernes = findViewById(R.id.IvViernes)
-        IvSabado = findViewById(R.id.IvSabado)
-        IvDomingo = findViewById(R.id.IvDomingo)
-
-
+        firstRun = actividadesMP.sharedPref(this,"first_run",Boolean::class.java) == true
 
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken(getString(R.string.default_web_client_id))
@@ -203,326 +73,337 @@ class MenuPrincipal : AppCompatActivity() {
             .build()
         googleSignInClient = GoogleSignIn.getClient(this,gso)
 
-        layout.layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
+        binding.lay.layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
 
-        var firtRun = sharedPref.getBoolean("first_run", true)
-        if (!firtRun) {
-            cardUsuario(this)
+        if (!actividadesMP.sharedPref(this,"first_run",Boolean::class.java)!!) {
             cardUsuario(this)
         }
 
+
+            Log.d(getString(R.string.menuPrincipal), "pickMedia en OnCreate, con ${titulo}, ${puntos},")
+            pickMedia = registerPickMedia()
+    }
+    var titulo = ""
+    var descripcion = ""
+    var puntos = ""
+    var tipo = ""
+    private fun registerPickMedia(): ActivityResultLauncher<PickVisualMediaRequest> {
+
+        Log.d(getString(R.string.menuPrincipal),"Llega a register pickmedia con estos puntos: $puntos")
+
+        return registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+            if (uri != null) {
+                val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                        Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+
+                try {
+                    applicationContext.contentResolver.takePersistableUriPermission(uri, takeFlags)
+                } catch (e: SecurityException) {
+                    e.printStackTrace()
+                }
+
+                actividadesMP.saveSharedPref(contsto,"fotoTarea", uri.toString())
+
+
+                Log.d(getString(R.string.menuPrincipal),"PickMedia -> popImagen con puntos ${puntos} y binding $binding")
+                    actividadesMP.popImagen(this, titulo, descripcion, puntos, binding.progressIndicator, binding,tipo)
+
+            }
+        }
     }
 
-    fun cardUsuario(context: Context){
-        progressIndicator.visibility = View.VISIBLE
 
-        val sharedPref = context.getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
-        var nombre = sharedPref.getString("UserName", "")
-        val uid = sharedPref.getString("UID", "")
-        val foto = sharedPref.getString("fotoPerfil","")
-        val tipo = sharedPref.getString("tipoFoto","")
-        val diasSemana = sharedPref.getString("diasSemana","")
+    @SuppressLint("DiscouragedApi")
+    private fun setDiasSemana(context: Context){
 
-        // Aquí recuperamos el Map de las SharedPreferences y asignamos los drawables a los ImageViews
-        val jsonString = sharedPref.getString("diasSemana", "")
+        actividadesMP.log(getString(R.string.menuPrincipal),Exception().stackTrace[0].fileName
+                +" " + Exception().stackTrace[0].methodName)
+
+        val jsonString = actividadesMP.sharedPref(context,"diasSemana",String::class.java)
         val type = object : TypeToken<Map<String, String>>() {}.type
         val recuperadoMap: Map<String, String> = Gson().fromJson(jsonString, type)
 
-        val dias = listOf("IvLunes", "IvMartes", "IvMiercoles", "IvJueves", "IvViernes", "IvSabado", "IvDomingo")
+        val dias = mapOf(
+            "IvLunes" to R.id.IvLunes,
+            "IvMartes" to R.id.IvMartes,
+            "IvMiercoles" to R.id.IvMiercoles,
+            "IvJueves" to R.id.IvJueves,
+            "IvViernes" to R.id.IvViernes,
+            "IvSabado" to R.id.IvSabado,
+            "IvDomingo" to R.id.IvDomingo
+        )
 
-        for (dia in dias) {
-            val imageView: ImageView = findViewById(resources.getIdentifier(dia, "id", packageName))
-            imageView.setImageResource(resources.getIdentifier(recuperadoMap[dia], "drawable", packageName))
+        for ((dia, id) in dias) {
+            val imageView: ImageView = findViewById(id)
+            val drawableId = resources.getIdentifier(recuperadoMap[dia], "drawable", packageName)
+            imageView.setImageResource(drawableId)
         }
 
+        val diaDeLaSemana = LocalDate.now().dayOfWeek.value
+        binding.progressBar.progress = diaDeLaSemana-1
+        binding.progressIndicator.visibility = View.GONE
+    }
+
+    private fun cardUsuario(context: Context){
+        actividadesMP.log(getString(R.string.menuPrincipal),Exception().stackTrace[0].fileName
+                +" " + Exception().stackTrace[0].methodName)
+
+        var nombre = actividadesMP.sharedPref(context,"UserName",String::class.java)
+        val uid = actividadesMP.sharedPref(context,"UID",String::class.java)
+        val foto = actividadesMP.sharedPref(context,"fotoPerfil",String::class.java)
+        val tipo = actividadesMP.sharedPref(context,"tipoFoto",String::class.java)
+
         if (nombre != null) nombre = nombre.split(" ")[0]
-        nombreUsuario.text = "\t BIENVENIDO $nombre"
+        binding.nombreUsuario.text = getString(R.string.bienvenido, nombre)
+
         cFirebase.LeerDatos("Usuarios","Puesto","Empleado",this)
 
         try{
-            val jsonArray = actividadesMP.leeArchivo(this,"Usuarios")
-            var objetoBuscado: JSONObject? = null
 
-            for (i in 0 until jsonArray.length()) {
-                val objeto = jsonArray.getJSONObject(i)
-                if (objeto.getString("UID") == uid) {
-                    objetoBuscado = objeto
-                    break
-                }
-            }
-
-            if (objetoBuscado != null) {
-                tvMonedas.text = "$ ${objetoBuscado.getInt("monedas")}"
-            } else {
-                Log.d("MiApp", "No se encontró el usuario")
-            }
+            binding.tvMonedas.text = actividadesMP.objetoBuscado(
+                actividadesMP.leeArchivo(this,"Usuarios"),
+                uid!!,"monedas",Int::class) .toString()
 
             if (tipo == "uri"){
-                if (foto != null) {
                     val decodedString = Base64.decode(foto, Base64.DEFAULT)
                     val decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.size)
-                    fotoPerfil.setImageBitmap(decodedByte)
-                }
+                    binding.fotoPerfil.setImageBitmap(decodedByte)
+
             }else{
                 val user = Firebase.auth.currentUser
                 user?.let {
                     val photoURL = it.photoUrl
-
-                    var image: Bitmap? = null
-                    val imageurl = photoURL.toString()
-                    val executorService = Executors.newSingleThreadExecutor()
-                    executorService.execute {
-                        try {
-                            val `in` = java.net.URL(imageurl).openStream()
-                            image = BitmapFactory.decodeStream(`in`)
-
-                            runOnUiThread {
-                                try {
-                                    Log.d("xd", "Entra a bitmap")
-                                    Thread.sleep(1000)
-                                    Log.d("image","imagen $image")
-                                    fotoPerfil.setImageBitmap(image)
-                                } catch (e: InterruptedException) {
-                                    Log.d("tag1","Error UI 1")
-                                }
-                            }
-                        } catch (e: Exception) {
-                            runOnUiThread {
-                                Log.d("tag1","Error UI 2")
-                            }
-                        }
-                    }
+                    Glide.with(this)
+                        .load(photoURL)
+                        .into(binding.fotoPerfil)
                 }
-
             }
         }catch (e: FileNotFoundException) {
-            Log.d("TAG", "Archivo no encontrado, reintentando en 5 segundos", e)
+
+            actividadesMP.log(getString(R.string.menuPrincipal),Exception().stackTrace[0].fileName
+                    +" " + Exception().stackTrace[0].methodName +"\n" +
+                    "Archivo no encontrado, reintentando en 5 segundos $e")
+
             Handler(Looper.getMainLooper()).postDelayed({
-                // Reintentar AsignarTareas después de 5 segundos
-                val json = actividadesMP.leeArchivo(this,"Usuarios")
                 cardUsuario(this)
             }, 5000)
-        }finally {
-            Log.d("TAG", "No se pudo w")
-        }
 
-        //-------------
-        val diaDeLaSemana = LocalDate.now().dayOfWeek.value
-        progreso.progress = diaDeLaSemana-1
-        progressIndicator.visibility = View.GONE
+        }
     }
-    fun cardSemanal(view: View){
+
+    fun cardSemanal(view: View) {
+        actividadesMP.log(getString(R.string.menuPrincipal),Exception().stackTrace[0].methodName)
+        binding.CargaCircular.isVisible = true
         val sharedPref = this.getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
-        val puntos = sharedPref.getString("puntos","")
-        val tituloSemanal = sharedPref.getString("tituloSemanal","")
-        val descripcionSemanal = sharedPref.getString("descripcionSemanal","")
-        val subtipoSemanal = sharedPref.getString("subtipoSemanal","")
+        puntos = actividadesMP.sharedPref(contsto, "puntosSemanal", String::class.java)!!
+        titulo = actividadesMP.sharedPref(contsto, "tituloSemanal", String::class.java)!!
+        descripcion =
+            actividadesMP.sharedPref(contsto, "descripcionSemanal", String::class.java)!!
+        tipo = "semanal"
 
-        when(subtipoSemanal){
-            "encuesta" -> actividadesMP.popEncuesta(contsto ,tituloSemanal!!,descripcionSemanal!!,puntos!!,progressIndicator)
+        Log.d(getString(R.string.menuPrincipal),"Card semanal con ${puntos}, ${titulo}, ${descripcion}, $tipo")
+
+        when (sharedPref.getString("subtipoSemanal", "")) {
+            "encuesta" -> {
+                actividadesMP.log(getString(R.string.menuPrincipal)+"➡ "+getString(R.string.actividades)
+                    ,Exception().stackTrace[0].methodName+
+                "➡ popEncuesta con ${titulo}, ${descripcion} , ${puntos}")
+
+                actividadesMP.popEncuesta(
+                    contsto,
+                    titulo,
+                    descripcion,
+                    puntos,
+                    binding.progressIndicator,
+                    binding
+                )
+            }
+
             "foto" -> {
-                val dialog = MaterialAlertDialogBuilder(this)
-                    .setTitle(tituloSemanal)
-                    .setMessage(descripcionSemanal)
-                    .setPositiveButton("Aceptar") { dialog, which ->
-
-
-
-
-                        pickMedia2.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-                    }
-                    .show()
-
-                }
+                Log.d("a", "Binding -> $binding")
+                pickMedia.launch(PickVisualMediaRequest())
+            }
         }
 
-        progressIndicator.visibility = View.GONE
+        binding.progressIndicator.visibility = View.GONE
     }
 
     fun getImages():List<String>{
-        return listOf(
-            "https://files.catbox.moe/q2s4ph.png"
-        )
+        return listOf("https://files.catbox.moe/q2s4ph.png")
     }
 
     fun DepCard(view: View){
-        val v = if (layoutTarea.visibility == View.GONE) View.VISIBLE else View.GONE
-        TransitionManager.beginDelayedTransition(layout, AutoTransition())
-        layoutTarea.visibility = v
+        val v = if (binding.layoutTarea.visibility == View.GONE) View.VISIBLE else View.GONE
+        TransitionManager.beginDelayedTransition(binding.lay, AutoTransition())
+        binding.layoutTarea.visibility = v
 
     }
 
-    fun prueba(view: View){
-        val sharedPref = this.getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
-        val subtipo = sharedPref.getString("subtipo","")
-        val puntos = sharedPref.getString("puntos","")
-        val tituloSemanal = sharedPref.getString("tituloSemanal","")
-        val descripcionSemanal = sharedPref.getString("descripcionSemanal","")
-        val subtipoSemanal = sharedPref.getString("subtipoSemanal","")
+    fun cardDiaria(view: View){
+        actividadesMP.log(getString(R.string.menuPrincipal),Exception().stackTrace[0].methodName)
 
-// Muestra el indicador de progreso antes de iniciar la operación de larga duración
-        var result =""
+        val subtipo = actividadesMP.sharedPref(contsto,"subtipo",String::class.java)
+        puntos = actividadesMP.sharedPref(contsto,"puntos",String::class.java)!!
+        titulo = binding.cTVtitulo.text.toString()
+        descripcion = binding.cTVDescripcion.text.toString()
+        tipo = "diaria"
+
+        binding.CargaCircular.isVisible = true
         Log.d("Subtipo", "Subtipo de actividad: $subtipo")
         when (subtipo) {
-            "escritura" -> actividadesMP.popEscritura(contsto,tvTit.text.toString(), tvDescripcion.text.toString(),puntos.toString(),progressIndicator)
-            "foto" -> pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-            "seleccionMultiple" -> actividadesMP.popSeleccionMultiple(contsto, tvTit.text.toString(), tvDescripcion.text.toString(), puntos.toString(),progressIndicator)
+            "escritura" -> {
+                actividadesMP.log(getString(R.string.menuPrincipal)+"➡"+getString(R.string.actividades)
+                    ,Exception().stackTrace[0].methodName+
+                        "➡ popEscritura con ${binding.cTVtitulo.text}, ${ binding.cTVDescripcion.text} , ${puntos}")
 
-            else -> {
-                when(subtipoSemanal){
-                    "encuesta" -> actividadesMP.popEncuesta(contsto ,sharedPref.getString("tituloSemanal","")!!,sharedPref.getString("descripcionSemanal","")!!,sharedPref.getString("puntosSemanal","")!!,progressIndicator)
-                }
+                actividadesMP.popEscritura(
+                    contsto,
+                    binding.cTVtitulo.text.toString(),
+                    binding.cTVDescripcion.text.toString(),
+                    puntos,
+                    binding.progressIndicator,
+                    binding
+                )
+            }
+            "foto" -> pickMedia.launch(PickVisualMediaRequest())
+            "seleccionMultiple" -> {
+                actividadesMP.log(getString(R.string.menuPrincipal)+"➡ "+getString(R.string.actividades)
+                    ,Exception().stackTrace[0].methodName+
+                            "➡ popSeleccionMultipe con ${binding.cTVtitulo.text}, ${ binding.cTVDescripcion.text} , ${puntos}")
+
+                actividadesMP.popSeleccionMultiple(
+                    contsto,
+                    binding.cTVtitulo.text.toString(),
+                    binding.cTVDescripcion.text.toString(),
+                    puntos,
+                    binding.progressIndicator,
+                    binding
+                )
             }
         }
-progressIndicator.visibility = View.GONE
+        binding.progressIndicator.visibility = View.GONE
     }
-    fun auxSemanal(context: MenuPrincipal, uid: String) {
-        val tvMonedas = (context as MenuPrincipal).findViewById<TextView>(R.id.tvMonedas)
-        val btnSemanal = (context as MenuPrincipal).findViewById<Button>(R.id.BotonSemanal)
-        btSemanal.visibility = View.GONE
+
+    fun auxSemanal(context: Context, uid: String, binding: ActivityMenuPrincipalBinding) {
+        Log.d(context.getString(R.string.menuPrincipal), "llega a auxSemanal " + "con ${uid} y binding $binding")
 
         Handler(Looper.getMainLooper()).postDelayed({
-            val jsonArray = actividadesMP.leeArchivo(context,"Usuarios")
-            var objetoBuscado: JSONObject? = null
+            actividadesMP.saveSharedPref(context,"BotonSemanal",false)
+            binding.BotonSemanal.isEnabled = false
+            actividadesMP.log(context.getString(R.string.menuPrincipal)+"➡ "+context.getString(R.string.actividades)
+                ,"➡ Objeto buscado")
 
-            for (i in 0 until jsonArray.length()) {
-                val objeto = jsonArray.getJSONObject(i)
-                if (objeto.getString("UID") == uid) {
-                    objetoBuscado = objeto
-                    break
-                }
-            }
-            if (objetoBuscado != null) {
-                Log.d("Objeto","Entra a objeto buscado")
-                tvMonedas.text = "$ ${objetoBuscado.getInt("monedas")}"
-            } else {
-                Log.d("MiApp", "No se encontró el usuario")
-            }
-        }, 5000)
+                binding.tvMonedas.text = actividadesMP.objetoBuscado(
+                    actividadesMP.leeArchivo(context,"Usuarios"),
+                    uid,"monedas",Int::class) .toString()
+            actividadesMP.saveSharedPref(context,"tituloSemanal","Realizada!")
 
-        val sharedPref = getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
-        val editor = sharedPref.edit()
-        editor.putString("tituloSemanal","Realizada!")
-        editor.apply()
 
-        val carouselRecyclerView: RecyclerView = findViewById(R.id.carouselRecyclerView)
-        carouselRecyclerView.adapter = CarouselAdapter(images = getImages(),"Realizada!")
+            binding.carouselRecyclerView.adapter = CarouselAdapter(images = getImages(),"Realizada!")
+            binding.CargaCircular.isVisible = false
+        }, 10000)
+
+
     }
-    fun aux(context: Context,uid: String){
-        val tvMonedas = (context as MenuPrincipal).findViewById<TextView>(R.id.tvMonedas)
-        val tvNotificacion = context.findViewById<TextView>(R.id.cTVnoti)
-        val btnEnviar = context.findViewById<TextView>(R.id.btnEnviarActividad)
-        val IvCargaCircular = context.findViewById<CircularProgressIndicator>(R.id.CargaCircular)
-        val layout = context.findViewById<RelativeLayout>(R.id.layoutTarea)
-
-        val IvLunes = context.findViewById<ImageView>(R.id.IvLunes)
-        val IvMartes = context.findViewById<ImageView>(R.id.IvMartes)
-        val IvMiercoles = context.findViewById<ImageView>(R.id.IvMiercoles)
-        val IvJueves = context.findViewById<ImageView>(R.id.IvJueves)
-        val IvViernes = context.findViewById<ImageView>(R.id.IvViernes)
-        val IvSabado = context.findViewById<ImageView>(R.id.IvSabado)
-        val IvDomingo = context.findViewById<ImageView>(R.id.IvDomingo)
-
+    fun aux(context: Context, uid: String, binding: ActivityMenuPrincipalBinding) {
+        // Recuperar y mostrar las monedas del usuario
+        fun actualizarMonedas(context: Context, uid: String) {
+            try {
+                val monedas = actividadesMP.objetoBuscado(
+                    actividadesMP.leeArchivo(context, "Usuarios"),
+                    uid, "monedas", Int::class
+                ).toString()
+                binding.tvMonedas.text = monedas
+            } catch (e: NullPointerException) {
+                // Si se produce una excepción, reintenta después de un corto intervalo de tiempo
+                Handler(Looper.getMainLooper()).postDelayed({
+                    actualizarMonedas(context, uid)
+                }, 5000)
+            }
+        }
         Handler(Looper.getMainLooper()).postDelayed({
-            val jsonArray = actividadesMP.leeArchivo(context,"Usuarios")
-            var objetoBuscado: JSONObject? = null
-
-            for (i in 0 until jsonArray.length()) {
-                val objeto = jsonArray.getJSONObject(i)
-                if (objeto.getString("UID") == uid) {
-                    objetoBuscado = objeto
-                    break
-                }
-            }
-            if (objetoBuscado != null) {
-                Log.d("Objeto","Entra a objeto buscado")
-                tvMonedas.text = "$ ${objetoBuscado.getInt("monedas")}"
-            } else {
-                Log.d("MiApp", "No se encontró el usuario")
-            }
+            actualizarMonedas(context, uid)
         }, 5000)
 
+
+
+        // Configurar la imagen del día de la semana
         val diaDeLaSemana = LocalDate.now().dayOfWeek.value
-        val imageViews = arrayOf(IvLunes, IvMartes, IvMiercoles, IvJueves, IvViernes, IvSabado, IvDomingo)
-        val drawables = arrayOf(R.drawable.lunesbien, R.drawable.martesbien, R.drawable.miercolesbien, R.drawable.juevesbien, R.drawable.viernesbien, R.drawable.sabadobien, R.drawable.domingobien)
-        imageViews[diaDeLaSemana-1].setImageResource(drawables[diaDeLaSemana-1])
+        val imageViews = arrayOf(
+            binding.IvLunes, binding.IvMartes, binding.IvMiercoles,
+            binding.IvJueves, binding.IvViernes, binding.IvSabado, binding.IvDomingo
+        )
+        val drawables = arrayOf(
+            R.drawable.lunesbien, R.drawable.martesbien, R.drawable.miercolesbien,
+            R.drawable.juevesbien, R.drawable.viernesbien, R.drawable.sabadobien, R.drawable.domingobien
+        )
+        imageViews[diaDeLaSemana - 1].setImageResource(drawables[diaDeLaSemana - 1])
 
-        IvCargaCircular.isVisible = false
-        layout.isVisible = false
+        // Ocultar elementos de la interfaz de usuario
+        binding.CargaCircular.isVisible = false
+        binding.layoutTarea.isVisible = false
 
+        // Actualizar las SharedPreferences con la actividad del día
         val dias = listOf("IvLunes", "IvMartes", "IvMiercoles", "IvJueves", "IvViernes", "IvSabado", "IvDomingo")
-
-// Obtiene el nombre del día correspondiente al número del día de la semana
         val nombreDelDia = dias[diaDeLaSemana - 1]
-
-        val sharedPref = context.getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
-        val jsonString = sharedPref.getString("diasSemana", "")
-        val racha = sharedPref.getInt("racha",0)
-
+        val jsonString = actividadesMP.sharedPref(context, "diasSemana", String::class.java)
         val type = object : TypeToken<Map<String, String>>() {}.type
         val recuperadoMap: Map<String, String> = Gson().fromJson(jsonString, type)
         val mutableMap = recuperadoMap.toMutableMap()
-
-// Reemplaza el valor por el nuevo valor
         val valorActual = mutableMap[nombreDelDia]
         mutableMap[nombreDelDia] = "$valorActual" + "bien"
-
-// Guarda el nuevo valor en las SharedPreferences
         val nuevoJsonString = Gson().toJson(mutableMap.toMap())
-        val editor = sharedPref.edit()
-        editor.putString("diasSemana", nuevoJsonString)
-        editor.putString("actNotificacion", "Actividad Realizada!")
-        editor.putBoolean("actBotonEnviar", false)
-        editor.putInt("racha", racha+1)
-        editor.apply()
+        actividadesMP.saveSharedPref(context, "diasSemana", nuevoJsonString)
 
-        tvNotificacion.text = sharedPref.getString("actNotificacion","")
-        btnEnviar.isEnabled = sharedPref.getBoolean("actBotonEnviar",true)
+        // Actualizar las SharedPreferences con la notificación y la racha
+        val racha = actividadesMP.sharedPref(context, "racha", Int::class.java)
+        actividadesMP.saveSharedPref(context, "actNotificacion", "Actividad Realizada!")
+        actividadesMP.saveSharedPref(context, "actBotonEnviar", false)
+        actividadesMP.saveSharedPref(context, "racha", racha!! + 1)
 
+        // Actualizar la interfaz de usuario con la notificación y el estado del botón
+        binding.cTVnoti.text = actividadesMP.sharedPref(context, "actNotificacion", String::class.java)
+        binding.btnEnviarActividad.isEnabled = actividadesMP.sharedPref(context, "actBotonEnviar", Boolean::class.java) == true
+        binding.CargaCircular.isVisible = false
     }
+
 
     @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     override fun onStart() {
         super.onStart()
-
-// Obtén las preferencias compartidas
-        val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         // Obtiene la fecha almacenada previamente (si existe)
-        val lastOpenDate = prefs.getLong(LAST_OPEN_DATE, 0)
+        val lastOpenDate = actividadesMP.sharedPref(contsto,LAST_OPEN_DATE,Long::class.java)
         // Obtiene la fecha actual
         val currentDate = Calendar.getInstance().timeInMillis
         // Obtiene la fecha actual sin la hora (para comparar solo el día)
-        val currentDay = Calendar.getInstance()
-        currentDay.timeInMillis = currentDate
-        currentDay.set(Calendar.HOUR_OF_DAY, 0)
-        currentDay.set(Calendar.MINUTE, 0)
-        currentDay.set(Calendar.SECOND, 0)
-        currentDay.set(Calendar.MILLISECOND, 0)
+        // Obtiene la fecha actual y la fecha almacenada sin la hora (para comparar solo el día)
+        val currentDay = Calendar.getInstance().apply {
+            timeInMillis = currentDate
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        val lastOpenDay = Calendar.getInstance().apply {
+            timeInMillis = lastOpenDate!!
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
 
-        // Obtiene la fecha almacenada sin la hora
-        val lastOpenDay = Calendar.getInstance()
-        lastOpenDay.timeInMillis = lastOpenDate
-        lastOpenDay.set(Calendar.HOUR_OF_DAY, 0)
-        lastOpenDay.set(Calendar.MINUTE, 0)
-        lastOpenDay.set(Calendar.SECOND, 0)
-        lastOpenDay.set(Calendar.MILLISECOND, 0)
-
-        // Compara las fechas
-        val sharedPref = getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
-        val editor = sharedPref.edit()
-
-        if (currentDay != lastOpenDay && firstRun == false) {
+        if (currentDay != lastOpenDay && !firstRun) {
             actMenu.AsignarTareas(this,"diaria","Tareas")
-            editor.putString("actNotificacion","Tienes una nueva asignacion!")
-            editor.putBoolean("actBotonEnviar",true)
-
-            prefs.edit().putLong(LAST_OPEN_DATE, currentDate).apply()
+            actividadesMP.saveSharedPref(contsto,"actNotificacion","Tienes una nueva asignacion!")
+            actividadesMP.saveSharedPref(contsto,"actBotonEnviar",true)
+            actividadesMP.saveSharedPref(contsto,LAST_OPEN_DATE,currentDate)
 
             //Reinicia dias de la semana si es lunes:
             val diaDeLaSemana = LocalDate.now().dayOfWeek.value
             if (diaDeLaSemana == 1) { // Si es lunes
-                btSemanal.alpha= 0f
-                btSemanal.isEnabled = true
+                binding.BotonSemanal.alpha= 0f
+                binding.BotonSemanal.isEnabled = true
+                actividadesMP.saveSharedPref(this, "BotonSemanal", true)
                 val diasSemana: Map<String, String> =
                     mapOf("IvLunes" to "lunes", "IvMartes" to "martes", "IvMiercoles" to "miercoles",
                         "IvJueves" to "jueves","IvViernes" to "viernes","IvSabado" to "sabado",
@@ -530,59 +411,51 @@ progressIndicator.visibility = View.GONE
 
                 val jsonString = Gson().toJson(diasSemana)
 
-                editor.putString("diasSemana", jsonString)
-                editor.apply()
+                actividadesMP.saveSharedPref(contsto,"diasSemana",jsonString)
 
                 //Tarea semanal
                 actMenu.AsignarTareas(this,"semanal","Tareassemanal")
 
             }else{
-                val dias = listOf("IvLunes", "IvMartes", "IvMiercoles", "IvJueves", "IvViernes", "IvSabado", "IvDomingo")
+                val dias = listOf("IvLunes", "IvMartes", "IvMiercoles",
+                    "IvJueves", "IvViernes", "IvSabado", "IvDomingo")
 // Obtiene el nombre del día correspondiente al número del día de la semana de ayer
                 val nombreDelDia = dias[diaDeLaSemana - 2]
-                val jsonString = sharedPref.getString("diasSemana", "")
+                val jsonString = actividadesMP.sharedPref(contsto,"diasSemana",String::class.java)
 
                 val type = object : TypeToken<Map<String, String>>() {}.type
                 val recuperadoMap: Map<String, String> = Gson().fromJson(jsonString, type)
                 val mutableMap = recuperadoMap.toMutableMap()
 
-// Reemplaza el valor por el nuevo valor
+                // Reemplaza el valor por el nuevo valor
                 val valorActual = mutableMap[nombreDelDia]
                 if (!valorActual!!.contains("bien")){
                     mutableMap[nombreDelDia] = "$valorActual" + "mal"
                     val nuevoJsonString = Gson().toJson(mutableMap.toMap())
-                    editor.putString("diasSemana", nuevoJsonString)
-                    editor.apply()
+                    actividadesMP.saveSharedPref(contsto,"diasSemana",nuevoJsonString)
                 }
             }
-
-            editor.apply()
         }
 
         //-----------------------
         // Recuperar el texto de la variable elemento usando la misma clave
-        tvNotificacion.text = sharedPref.getString("actNotificacion","")
-        tvDescripcion.text = sharedPref.getString("descripcion", "")
-        tvTit.text =  sharedPref.getString("titulo", "")
-        btnEnviar.isEnabled = sharedPref.getBoolean("actBotonEnviar",true)
+        binding.cTVnoti.text = actividadesMP.sharedPref(contsto,"actNotificacion",String::class.java)
+        binding.cTVDescripcion.text = actividadesMP.sharedPref(contsto,"descripcion",String::class.java)
+        binding.cTVtitulo.text =  actividadesMP.sharedPref(contsto,"titulo",String::class.java)
+        binding.btnEnviarActividad.isEnabled = actividadesMP.sharedPref(contsto,"actBotonEnviar",Boolean::class.java) == true
         val carouselRecyclerView: RecyclerView = findViewById(R.id.carouselRecyclerView)
-        carouselRecyclerView.adapter = CarouselAdapter(images = getImages(),sharedPref.getString("tituloSemanal","")!!)
+        carouselRecyclerView.adapter = CarouselAdapter(images = getImages(),
+            actividadesMP.sharedPref(contsto,"tituloSemanal",String::class.java)!!)
 
     }
 
-    fun VerificaPrimeraVez(){
-        val sharedPref = getSharedPreferences("MI_APP", Context.MODE_PRIVATE)
-        val editor = sharedPref.edit()
-        val FIRST_RUN = "first_run"
-        val firstRun = sharedPref.getBoolean(FIRST_RUN, true)
-        if (firstRun) {
+    private fun VerificaPrimeraVez(){
+        if (actividadesMP.sharedPref(contsto,"first_run",Boolean::class.java) == true) {
             val intent = Intent(this, PrimeraVez::class.java)
             startActivity(intent)
             finish()
-            editor.putBoolean(FIRST_RUN, false)
-            editor.apply()
+            actividadesMP.saveSharedPref(contsto,"first_run",false)
         }
     }
-
 
 }

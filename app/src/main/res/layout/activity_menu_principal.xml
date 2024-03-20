@@ -24,11 +24,21 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
+
+
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <!-- ImageView -->
+            <com.google.android.material.progressindicator.LinearProgressIndicator
+                android:id="@+id/CargaCircular"
+                android:layout_width="50dp"
+                android:layout_height="25dp"
+                android:layout_marginTop="15dp"
+                android:layout_marginEnd="20dp"
+                android:indeterminate="true"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
             <com.google.android.material.imageview.ShapeableImageView
                 android:id="@+id/fotoPerfil"
@@ -55,14 +65,7 @@
                 app:layout_constraintTop_toTopOf="parent" />
 
             <!-- TextView Nuevo (Parte superior derecha) -->
-            <com.google.android.material.progressindicator.CircularProgressIndicator
-                android:id="@+id/CargaCircular"
-                android:layout_width="15dp"
-                android:layout_height="15dp"
-                android:indeterminate="true"
-                app:layout_constraintEnd_toStartOf="@id/tvMonedas"
-                app:layout_constraintTop_toTopOf="parent"
-                android:visibility="gone"/>
+
             <TextView
                 android:id="@+id/tvMonedas"
                 android:layout_width="wrap_content"
@@ -137,7 +140,7 @@
                         android:text="Enviar"
                         android:layout_below="@id/cTVDescripcion"
                         android:layout_alignParentRight="true"
-                        android:onClick="prueba"
+                        android:onClick="cardDiaria"
                         app:icon="@drawable/flecha_derecha" />
                 </RelativeLayout>
             </ScrollView>
