@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="seed">#FFCBA4</color>
+    <color name="seed2">#FFCBA5</color>
     <color name="md_theme_light_primary">#914D00</color>
     <color name="md_theme_light_onPrimary">#FFFFFF</color>
     <color name="md_theme_light_primaryContainer">#FFDCC3</color>

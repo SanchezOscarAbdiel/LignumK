@@ -53,7 +53,7 @@ class PrimeraVez : AppCompatActivity() {
         binding = ActivityPrimeraVezBinding.inflate(layoutInflater)
         setContentView(binding.root)
         auth = Firebase.auth
-
+        actividadesMP.saveSharedPref(this,"first_run",false)
         pickMedia = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
             binding.ImButtonFotoPerfil.setImageURI(uri)
             actividades.uriToBase64(this,uri!!,"fotoPerfil")
@@ -69,9 +69,11 @@ class PrimeraVez : AppCompatActivity() {
         //DescargaArchivosSingingGoogle
         cFirebase.LeerDatos("Tareas", "tipo", "diaria", this)
         cFirebase.LeerDatos("Tareas", "tipo", "semanal", this)
+        cFirebase.LeerDatos("Tienda", "tipo", "potenciador", this)
+        cFirebase.LeerDatos("Tienda", "tipo", "estetica", this)
 
         //AsignaTareas
-        actividades.AsignarTareas(this,"diaria","Tarea") //Se lee el archivo y se extrae la tarea en el momento
+        actividades.AsignarTareas(this,"diaria","Tareas") //Se lee el archivo y se extrae la tarea en el momento
 
         rellenaSpin()
     }
@@ -99,34 +101,37 @@ class PrimeraVez : AppCompatActivity() {
             jsonObject.put("Puesto", pspinner)
             jsonObject.put("Ddescanso", chipsSeleccionados)
             jsonObject.put("monedas", 0)
-            jsonObject.put("racha",0)
-            jsonObject.put("respuestas","")
+            jsonObject.put("racha", 0)
+            jsonObject.put("respuestas", "")
             val jsonDatos = jsonObject.toString()
 
-            lifecycleScope.launch {
-                try {
-                    cFirebase.PostData(jsonDatos).await()
 
-                    //Habilita drawables dia de la semana
-                    val diasSemana: Map<String, String> =
-                        mapOf("IvLunes" to "lunes", "IvMartes" to "martes", "IvMiercoles" to "miercoles",
-                            "IvJueves" to "jueves","IvViernes" to "viernes","IvSabado" to "sabado",
-                            "IvDomingo" to "domingo")
-                    val jsonString = Gson().toJson(diasSemana)
+            try {
+                cFirebase.PostData(jsonDatos)
 
-                    actividades.saveSharedPref(this@PrimeraVez, "UID",puid)
-                    actividades.saveSharedPref(this@PrimeraVez, "diasSemana",jsonString)
-                    actividades.saveSharedPref(this@PrimeraVez, "racha",0)
+                //Habilita drawables dia de la semana
+                val diasSemana: Map<String, String> =
+                    mapOf(
+                        "IvLunes" to "lunes", "IvMartes" to "martes", "IvMiercoles" to "miercoles",
+                        "IvJueves" to "jueves", "IvViernes" to "viernes", "IvSabado" to "sabado",
+                        "IvDomingo" to "domingo"
+                    )
+                val jsonString = Gson().toJson(diasSemana)
 
-                    Handler(Looper.getMainLooper()).postDelayed({
-                        val intent = Intent(this@PrimeraVez, MenuPrincipal::class.java)
-                        startActivity(intent)
-                        this@PrimeraVez.finish()
-                    },3000)
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error al actualizar los datos en Firebase", e)
-                }
+                actividades.saveSharedPref(this@PrimeraVez, "UID", puid)
+                actividades.saveSharedPref(this@PrimeraVez, "diasSemana", jsonString)
+                actividades.saveSharedPref(this@PrimeraVez, "racha", 0)
+                actividades.saveSharedPref(this@PrimeraVez,"AvatarComprados","https://files.catbox.moe/q2s4ph.png")
+                actividades.saveSharedPref(this@PrimeraVez,"AvatarActivo","https://files.catbox.moe/q2s4ph.png")
+                actividades.saveSharedPref(this@PrimeraVez,"Skin",R.color.seed)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error al actualizar los datos en Firebase", e)
             }
+
+            Handler(Looper.getMainLooper()).postDelayed({
+                val intent = Intent(this@PrimeraVez, MenuPrincipal::class.java)
+                startActivity(intent)
+            }, 25000)
 
         } else {
             Toast.makeText(this, "Selecciona todos los campos.", Toast.LENGTH_SHORT).show()

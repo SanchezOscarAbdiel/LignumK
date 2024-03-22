@@ -31,7 +31,8 @@ class ConexionFirebase {
                 // Imprimir los datos formateados
                 Log.d(TAG, "Datos del documento: $datosFormateados")
 
-                if(valor == "semanal"){
+
+                if(valor == "semanal" || valor == "potenciador" || valor == "estetica"){
                     val archivo = File(context.getExternalFilesDir(null), "${coleccion}${valor}.json")
                     val archivoEscritor = FileWriter(archivo)
                     archivoEscritor.write(datosFormateados) // Escribir los datos formateados en el archivo

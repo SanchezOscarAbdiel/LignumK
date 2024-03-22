@@ -82,7 +82,7 @@ class Actividades{
 
         val prompt = "A un trabajador de una empresa madedera se le asignó una encuesta, teniendo que " +
                 "responder las siguientes preguntas:'${descripcion}'. estas fueron sus respuestas: " +
-                "'${respuesta}'.escribe: -${puntos}/${puntos}-) " +
+                "'${respuesta}'.escribe: -${puntos}/${puntos}-(ejemplo: -5/10-) " +
                 "y escribe un pequeño comentario constructivo en base a sus respuestas"
 
         generativeModel.generateContent(prompt) .text?.let { popRetroalimentacion(contexto, it, titulo,progressIndicator,tipo, binding) }
@@ -383,7 +383,9 @@ class Actividades{
 
                 CoroutineScope(Dispatchers.Main).launch {
                     Log.d(contexto.getString(R.string.actividades), "popImage con ${titulo}, ${descripcion}" +
-                            ", ${puntos}, $tipo")
+                            ", ${puntos}, ${tipo}, ${texto.text}")
+                    saveSharedPref(contexto,"respuestasSemanal",texto.text.toString())
+
                     samAIimagen(contexto,titulo,descripcion,texto.text.toString(), puntos,progressIndicator, binding, tipo)
                 }
 

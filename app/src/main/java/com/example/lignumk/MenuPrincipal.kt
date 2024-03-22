@@ -24,16 +24,17 @@ import java.io.FileNotFoundException
 import java.time.LocalDate
 import java.util.Calendar
 import android.util.Base64
-import android.widget.Button
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.lignumk.databinding.ActivityMenuPrincipalBinding
-import com.google.android.material.progressindicator.LinearProgressIndicator
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.common.reflect.TypeToken
 import com.google.gson.Gson
 import java.lang.NullPointerException
@@ -45,7 +46,7 @@ val actividadesMP = Actividades()
 class MenuPrincipal : AppCompatActivity() {
 
 
-
+    private lateinit var taskViewModel: TaskViewModel
     val actMenu = Actividades()
     private val LAST_OPEN_DATE = "lastOpenDate"
 
@@ -59,7 +60,9 @@ class MenuPrincipal : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMenuPrincipalBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        taskViewModel = ViewModelProvider(this).get(TaskViewModel::class.java)
         VerificaPrimeraVez()
+        setCardColor()
         setDiasSemana(this)
         binding.CargaCircular.isVisible = false
         binding.progressIndicator.visibility = View.GONE
@@ -82,11 +85,41 @@ class MenuPrincipal : AppCompatActivity() {
 
             Log.d(getString(R.string.menuPrincipal), "pickMedia en OnCreate, con ${titulo}, ${puntos},")
             pickMedia = registerPickMedia()
+
+        //binding.cardAnuncio.strokeColor = Color.RED // Cambia esto al color de borde que prefieras
+        //binding.cardAnuncio.strokeWidth = 5
+
     }
     var titulo = ""
     var descripcion = ""
     var puntos = ""
     var tipo = ""
+    override fun onResume() {
+        super.onResume()
+        Log.d("OnResume","Entrando a onResume")
+        cardUsuario(this)
+    }
+    fun setCardColor(){
+        val col = actividadesMP.sharedPref(contsto,"Skin",Int::class.java)!!
+        val colorSeed = ContextCompat.getColor(contsto, col)
+
+// Aplicar el color recuperado a una vista
+        binding.cardUsuario.setCardBackgroundColor(colorSeed)
+        binding.cardAnuncio.setCardBackgroundColor(colorSeed)
+        binding.cardInsignia.setCardBackgroundColor(colorSeed)
+        binding.cardOpciones.setCardBackgroundColor(colorSeed)
+        binding.cardLeaderboard.setCardBackgroundColor(colorSeed)
+        binding.cardTareas.setCardBackgroundColor(colorSeed)
+        binding.cardTareasSemanales.setCardBackgroundColor(colorSeed)
+        binding.cardTienda.setCardBackgroundColor(colorSeed)
+    }
+
+    fun bottomSheet(view: View){
+        Tienda().show(supportFragmentManager, "Tienda")
+        if(Tienda().isHidden){
+            this.recreate()
+        }
+    }
     private fun registerPickMedia(): ActivityResultLauncher<PickVisualMediaRequest> {
 
         Log.d(getString(R.string.menuPrincipal),"Llega a register pickmedia con estos puntos: $puntos")
@@ -111,7 +144,6 @@ class MenuPrincipal : AppCompatActivity() {
             }
         }
     }
-
 
     @SuppressLint("DiscouragedApi")
     private fun setDiasSemana(context: Context){
@@ -144,7 +176,7 @@ class MenuPrincipal : AppCompatActivity() {
         binding.progressIndicator.visibility = View.GONE
     }
 
-    private fun cardUsuario(context: Context){
+    fun cardUsuario(context: Context){
         actividadesMP.log(getString(R.string.menuPrincipal),Exception().stackTrace[0].fileName
                 +" " + Exception().stackTrace[0].methodName)
 
@@ -221,7 +253,15 @@ class MenuPrincipal : AppCompatActivity() {
 
             "foto" -> {
                 Log.d("a", "Binding -> $binding")
-                pickMedia.launch(PickVisualMediaRequest())
+                MaterialAlertDialogBuilder(contsto)
+                    .setTitle(titulo)
+                    .setMessage(descripcion)
+                    .setPositiveButton("Aceptar") { dialog, which ->
+                        pickMedia.launch(PickVisualMediaRequest())
+                    }
+                    .setNegativeButton("Cancelar", null)
+                    .show()
+
             }
         }
 
@@ -229,7 +269,7 @@ class MenuPrincipal : AppCompatActivity() {
     }
 
     fun getImages():List<String>{
-        return listOf("https://files.catbox.moe/q2s4ph.png")
+        return listOf(actividadesMP.sharedPref(contsto,"AvatarActivo",String::class.java)!!)
     }
 
     fun DepCard(view: View){
@@ -298,7 +338,6 @@ class MenuPrincipal : AppCompatActivity() {
                     uid,"monedas",Int::class) .toString()
             actividadesMP.saveSharedPref(context,"tituloSemanal","Realizada!")
 
-
             binding.carouselRecyclerView.adapter = CarouselAdapter(images = getImages(),"Realizada!")
             binding.CargaCircular.isVisible = false
         }, 10000)
@@ -366,7 +405,6 @@ class MenuPrincipal : AppCompatActivity() {
         binding.btnEnviarActividad.isEnabled = actividadesMP.sharedPref(context, "actBotonEnviar", Boolean::class.java) == true
         binding.CargaCircular.isVisible = false
     }
-
 
     @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     override fun onStart() {
@@ -451,10 +489,12 @@ class MenuPrincipal : AppCompatActivity() {
 
     private fun VerificaPrimeraVez(){
         if (actividadesMP.sharedPref(contsto,"first_run",Boolean::class.java) == true) {
+
+            finish()
             val intent = Intent(this, PrimeraVez::class.java)
             startActivity(intent)
-            finish()
-            actividadesMP.saveSharedPref(contsto,"first_run",false)
+
+
         }
     }
 
