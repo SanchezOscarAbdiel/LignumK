@@ -54,7 +54,7 @@ class MenuPrincipal : AppCompatActivity() {
     private lateinit var pickMedia: ActivityResultLauncher<PickVisualMediaRequest>
     private var firstRun by Delegates.notNull<Boolean>()
     val contsto = this
-    private lateinit var binding: ActivityMenuPrincipalBinding
+    lateinit var binding: ActivityMenuPrincipalBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -102,7 +102,7 @@ class MenuPrincipal : AppCompatActivity() {
     fun setCardColor(){
         val col = actividadesMP.sharedPref(contsto,"Skin",Int::class.java)!!
         val colorSeed = ContextCompat.getColor(contsto, col)
-
+Log.d("color", "ingresa a color: $col $colorSeed")
 // Aplicar el color recuperado a una vista
         binding.cardUsuario.setCardBackgroundColor(colorSeed)
         binding.cardAnuncio.setCardBackgroundColor(colorSeed)
@@ -114,12 +114,20 @@ class MenuPrincipal : AppCompatActivity() {
         binding.cardTienda.setCardBackgroundColor(colorSeed)
     }
 
-    fun bottomSheet(view: View){
+    fun bottomSheetTienda(view: View){
         Tienda().show(supportFragmentManager, "Tienda")
         if(Tienda().isHidden){
             this.recreate()
         }
     }
+
+    fun bottomSheetConfiguracion(view: View){
+        Configuracion().show(supportFragmentManager, "Configuracion")
+        if(Configuracion().isHidden){
+            this.recreate()
+        }
+    }
+
     private fun registerPickMedia(): ActivityResultLauncher<PickVisualMediaRequest> {
 
         Log.d(getString(R.string.menuPrincipal),"Llega a register pickmedia con estos puntos: $puntos")
@@ -192,7 +200,7 @@ class MenuPrincipal : AppCompatActivity() {
 
         try{
 
-            binding.tvMonedas.text = actividadesMP.objetoBuscado(
+            binding.tvMonedas.text = "$ "+actividadesMP.objetoBuscado(
                 actividadesMP.leeArchivo(this,"Usuarios"),
                 uid!!,"monedas",Int::class) .toString()
 
@@ -268,8 +276,8 @@ class MenuPrincipal : AppCompatActivity() {
         binding.progressIndicator.visibility = View.GONE
     }
 
-    fun getImages():List<String>{
-        return listOf(actividadesMP.sharedPref(contsto,"AvatarActivo",String::class.java)!!)
+    fun getImages(context: Context):List<String>{
+        return listOf(actividadesMP.sharedPref(context,"AvatarActivo",String::class.java)!!)
     }
 
     fun DepCard(view: View){
@@ -338,7 +346,7 @@ class MenuPrincipal : AppCompatActivity() {
                     uid,"monedas",Int::class) .toString()
             actividadesMP.saveSharedPref(context,"tituloSemanal","Realizada!")
 
-            binding.carouselRecyclerView.adapter = CarouselAdapter(images = getImages(),"Realizada!")
+            binding.carouselRecyclerView.adapter = CarouselAdapter(images = getImages(context),"Realizada!")
             binding.CargaCircular.isVisible = false
         }, 10000)
 
@@ -482,7 +490,7 @@ class MenuPrincipal : AppCompatActivity() {
         binding.cTVtitulo.text =  actividadesMP.sharedPref(contsto,"titulo",String::class.java)
         binding.btnEnviarActividad.isEnabled = actividadesMP.sharedPref(contsto,"actBotonEnviar",Boolean::class.java) == true
         val carouselRecyclerView: RecyclerView = findViewById(R.id.carouselRecyclerView)
-        carouselRecyclerView.adapter = CarouselAdapter(images = getImages(),
+        carouselRecyclerView.adapter = CarouselAdapter(images = getImages(this@MenuPrincipal),
             actividadesMP.sharedPref(contsto,"tituloSemanal",String::class.java)!!)
 
     }

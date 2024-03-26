@@ -17,13 +17,12 @@
         android:autoSizeTextType="uniform"
         android:text="TIENDA"
         android:background="@drawable/rectangulo"
-        android:backgroundTint="@color/seed"
         android:textColor="#914D00"
         android:textSize="40sp"
          />
 
     <TextView
-        android:id="@+id/textView4"
+        android:id="@+id/textView2"
         android:layout_width="170dp"
         android:layout_height="39dp"
         android:layout_marginStart="4dp"
@@ -44,7 +43,7 @@
     </LinearLayout>
 
     <TextView
-        android:id="@+id/textView2"
+        android:id="@+id/textView3"
         android:layout_width="170dp"
         android:layout_height="39dp"
         android:layout_marginStart="4dp"
@@ -53,5 +52,11 @@
         android:text="Potenciadores"
         android:textSize="14sp"
         />
+    <LinearLayout
+        android:id="@+id/miPotenciadorLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
 
+    </LinearLayout>
 </LinearLayout>

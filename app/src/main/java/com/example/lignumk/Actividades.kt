@@ -345,12 +345,20 @@ class Actividades{
         cMenuPrincipal.auxSemanal(contexto,uid, binding)
     }
 
-    private fun actualizaActividad(contexto: Context, puntos: String,binding: ActivityMenuPrincipalBinding){
+    fun actualizaActividad(contexto: Context, puntos: String,binding: ActivityMenuPrincipalBinding){
+        var Puntos = 0
+        val potenciador = sharedPref(contexto,"potenciadorActivo", String::class.java)!!
+        Puntos = if (potenciador == "Astillas")
+            puntos.toInt() * 2
+        else
+            puntos.toInt()
+
         val uid = sharedPref(contexto,"UID",String::class.java)
         val racha = sharedPref(contexto,"racha",Int::class.java)
 
         val json = actividadesMP.leeArchivo(contexto,"Usuarios")
-        val monedas : Int =  objetoBuscado(json,uid!!,"monedas",Int::class)?.plus(puntos.toInt()) ?: 0
+        var monedas : Int =  objetoBuscado(json,uid!!,"monedas",Int::class)?.plus(Puntos) ?: 0
+
 
         val jsonObject = JSONObject()
         jsonObject.put("coleccion", "Usuarios")
@@ -362,6 +370,9 @@ class Actividades{
         cFirebaseA.UpdateData(jsonDatos)
 
         cFirebaseA.LeerDatos("Usuarios","Puesto","Empleado",contexto)
+
+        actividades.saveSharedPref(contexto, "tipoPotenciadorActivo", "no")
+        actividades.saveSharedPref(contexto, "potenciadorActivo", "no")
 
         cMenuPrincipal.aux(contexto,uid, binding)
     }
@@ -453,13 +464,20 @@ class Actividades{
                 return view
             }
         }
+        val correcta = json!!.getString("correcta")
+        var tit = ""
+        val potenciadorActivo = sharedPref(contexto, "potenciadorActivo",String::class.java)
+        tit = if(potenciadorActivo.equals("Martillo del alba"))
+            "$titulo\n⭐Opcion correcta: $correcta"
+        else
+            titulo
 
         val dialog = MaterialAlertDialogBuilder(contexto)
-            .setTitle(titulo)
+            .setTitle(tit)
             .setAdapter(adapter) { dialog, which ->
                 val opcionSeleccionada = opciones[which]
                 CoroutineScope(Dispatchers.Main).launch {
-                    samAISeleccion(contexto,titulo,descripcion,opcionSeleccionada,json!!.getString("correcta"),puntos,progressIndicator, binding)
+                    samAISeleccion(contexto,titulo,descripcion,opcionSeleccionada,correcta,puntos,progressIndicator, binding)
                     dialog.cancel()
                     }
             }

@@ -27,15 +27,26 @@ import com.google.firebase.ktx.Firebase
 import org.json.JSONObject
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.PickVisualMediaRequest
-import androidx.lifecycle.lifecycleScope
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import android.app.AlarmManager
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Context
+import android.os.Build
+import android.widget.Button
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import java.util.Calendar
 
 class PrimeraVez : AppCompatActivity() {
+    companion object {
+        const val MY_CHANNEL_ID = "myChannel"
+    }
     private val actividades = Actividades()
 
     private var esAut = false
@@ -121,9 +132,12 @@ class PrimeraVez : AppCompatActivity() {
                 actividades.saveSharedPref(this@PrimeraVez, "UID", puid)
                 actividades.saveSharedPref(this@PrimeraVez, "diasSemana", jsonString)
                 actividades.saveSharedPref(this@PrimeraVez, "racha", 0)
-                actividades.saveSharedPref(this@PrimeraVez,"AvatarComprados","https://files.catbox.moe/q2s4ph.png")
-                actividades.saveSharedPref(this@PrimeraVez,"AvatarActivo","https://files.catbox.moe/q2s4ph.png")
+                actividades.saveSharedPref(this@PrimeraVez,"AvatarComprados","https://firebasestorage.googleapis.com/v0/b/lignumbd-b32e7.appspot.com/o/maderita.png?alt=media&token=dd072e43-ef88-4b95-baa8-6e89ed0709d9")
+                actividades.saveSharedPref(this@PrimeraVez,"AvatarActivo","https://firebasestorage.googleapis.com/v0/b/lignumbd-b32e7.appspot.com/o/maderita.png?alt=media&token=dd072e43-ef88-4b95-baa8-6e89ed0709d9")
                 actividades.saveSharedPref(this@PrimeraVez,"Skin",R.color.seed)
+                actividades.saveSharedPref(this@PrimeraVez,"SkinCompradas",R.color.seed.toString())
+                actividades.saveSharedPref(this@PrimeraVez, "tipoPotenciadorActivo", "no")
+                actividades.saveSharedPref(this@PrimeraVez, "potenciadorActivo", "no")
             } catch (e: Exception) {
                 Log.e(TAG, "Error al actualizar los datos en Firebase", e)
             }

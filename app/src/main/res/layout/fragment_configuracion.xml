@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".Configuracion">
+
+    <TextView
+        android:id="@+id/textView1"
+        android:layout_width="355dp"
+        android:layout_height="87dp"
+        android:layout_marginTop="12dp"
+        android:autoSizeMaxTextSize="1000dp"
+        android:autoSizeMinTextSize="1dp"
+        android:autoSizeTextType="uniform"
+        android:text="CONFIGURACION"
+        android:background="@drawable/rectangulo"
+        android:textColor="#914D00"
+        android:textSize="40sp"
+
+        />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="255dp"
+        android:layout_height="57dp"
+        android:layout_below="@+id/textView1"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginStart="5dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginEnd="151dp"
+        android:autoSizeMaxTextSize="1000dp"
+        android:autoSizeMinTextSize="1dp"
+        android:autoSizeTextType="uniform"
+        android:background="@drawable/rectangulo"
+        android:text="Foto de perfil"
+        android:textColor="#914D00"
+        android:textSize="40sp"
+        />
+
+    <ImageButton
+        android:id="@+id/IvFotoConfiguracion"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+        android:layout_below="@+id/textView2"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginStart="131dp"
+        android:layout_marginTop="0dp"
+        android:layout_marginEnd="130dp"
+        android:src="@drawable/engranaje_conf" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="255dp"
+        android:layout_height="57dp"
+        android:layout_below="@+id/IvFotoConfiguracion"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginStart="5dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginEnd="151dp"
+        android:autoSizeMaxTextSize="1000dp"
+        android:autoSizeMinTextSize="1dp"
+        android:autoSizeTextType="uniform"
+        android:background="@drawable/rectangulo"
+        android:text="Avatar"
+        android:textColor="#914D00"
+        android:textSize="40sp"
+        />
+
+    <LinearLayout
+        android:id="@+id/linearAvatar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_below="@+id/textView"
+        >
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="255dp"
+        android:layout_height="57dp"
+        android:layout_below="@+id/linearAvatar"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginStart="5dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginEnd="151dp"
+        android:autoSizeMaxTextSize="1000dp"
+        android:autoSizeMinTextSize="1dp"
+        android:autoSizeTextType="uniform"
+        android:background="@drawable/rectangulo"
+        android:text="Notificaciones"
+        android:textColor="#914D00"
+        android:textSize="40sp"
+        />
+
+    <com.google.android.material.materialswitch.MaterialSwitch
+        android:id="@+id/SwitchNotificacion"
+        style="@style/Widget.Material3.CheckedTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textView3"
+        android:text="Enviame noticias al correo."/>
+
+    <TextView
+        android:id="@+id/textView4"
+        android:layout_width="255dp"
+        android:layout_height="57dp"
+        android:layout_below="@+id/SwitchNotificacion"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginStart="5dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginEnd="151dp"
+        android:autoSizeMaxTextSize="1000dp"
+        android:autoSizeMinTextSize="1dp"
+        android:autoSizeTextType="uniform"
+        android:background="@drawable/rectangulo"
+        android:text="Apariencia"
+        android:textColor="#914D00"
+        android:textSize="40sp"
+        />
+
+    <LinearLayout
+        android:id="@+id/linearSkin"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_below="@+id/textView4"
+        >
+    </LinearLayout>
+
+</RelativeLayout>
