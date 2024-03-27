@@ -1,6 +1,7 @@
 package com.example.lignumk
 
 import ConexionFirebase
+import WorkManagerFile
 import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.util.Log
@@ -27,6 +28,12 @@ import android.widget.ArrayAdapter
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.work.Constraints
+import androidx.work.Data
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequest
+import androidx.work.PeriodicWorkRequest
+import androidx.work.WorkManager
 import com.example.lignumk.databinding.ActivityMenuPrincipalBinding
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.content
@@ -37,6 +44,8 @@ import kotlinx.coroutines.launch
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.io.FileNotFoundException
+import java.util.Calendar
+import java.util.concurrent.TimeUnit
 import kotlin.math.min
 import kotlin.reflect.KClass
 val cFirebaseA = ConexionFirebase()
@@ -511,11 +520,27 @@ class Actividades{
         }
         return if (objetoBuscado != null || opciones != null) Pair(objetoBuscado, opciones) else null
     }
+    fun sincronizaTareas(): Long {
+        val currentTime = Calendar.getInstance().get(Calendar.HOUR_OF_DAY) // Hora actual
+        val desiredHour = 7 // Hora deseada (7 AM)
+        val desiredMinute = 0 // Minuto deseado (35 minutos)
+        // Calcula la diferencia en milisegundos hasta la próxima ejecución
+        val delay = TimeUnit.HOURS.toMillis(((0 + desiredHour - currentTime) % 24).toLong()) +
+                TimeUnit.MINUTES.toMillis((desiredMinute - Calendar.getInstance().get(Calendar.MINUTE)).toLong())
 
+        return delay
+    }
+    fun periodicTimeR(contexto: Context, delay: Long,para: String){
+        val miPeriodicWorkRequest = PeriodicWorkRequest.Builder(WorkManagerFile::class.java, delay, TimeUnit.SECONDS)
+            .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
+            .setInputData(Data.Builder().putString("parametro", para).build())
+            .build()
+        WorkManager.getInstance(contexto).enqueue(miPeriodicWorkRequest)
+    }
 
-    /*fun oneTimeR(contexto: Context, delay: Long,para: String){
+    fun oneTimeR(contexto: Context, delay: Long,para: String){
         lateinit var workManager: WorkManager
-        workManager = WorkManager.getInstance(contexto)
+        WorkManager.getInstance(contexto)
         Log.d("Parametro", "Parametro oneTimeR: ${para}")
         val miOneTimeWorkRequest = OneTimeWorkRequest.Builder(WorkManagerFile::class.java)
             .setConstraints(Constraints.Builder().setRequiresBatteryNotLow(false).build())
@@ -526,30 +551,14 @@ class Actividades{
 
     }
 
-    fun sincronizaTareas(): Long {
-        val currentTime = Calendar.getInstance().get(Calendar.HOUR_OF_DAY) // Hora actual
-        val desiredHour = 16 // Hora deseada (7 AM)
-        val desiredMinute = 8 // Minuto deseado (35 minutos)
-        // Calcula la diferencia en milisegundos hasta la próxima ejecución
-        val delay = TimeUnit.HOURS.toMillis(((0 + desiredHour - currentTime) % 24).toLong()) +
-                TimeUnit.MINUTES.toMillis((desiredMinute - Calendar.getInstance().get(Calendar.MINUTE)).toLong())
+    /*f
 
 
-        return delay
-    }
 
     fun periodicRTareas(contexto: Context){
         val miPeriodicWorkRequest = PeriodicWorkRequest.Builder(WorkManagerFile::class.java, 15, TimeUnit.MINUTES)
             .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
             .setInputData(Data.Builder().putString("parametro", "AsignarTareas").build())
-            .build()
-        WorkManager.getInstance(contexto).enqueue(miPeriodicWorkRequest)
-    }
-
-    fun periodicTimeR(contexto: Context, delay: Long,para: String){
-        val miPeriodicWorkRequest = PeriodicWorkRequest.Builder(WorkManagerFile::class.java, delay, TimeUnit.SECONDS)
-            .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
-            .setInputData(Data.Builder().putString("parametro", para).build())
             .build()
         WorkManager.getInstance(contexto).enqueue(miPeriodicWorkRequest)
     }

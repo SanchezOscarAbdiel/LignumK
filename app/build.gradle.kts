@@ -107,5 +107,7 @@ dependencies {
     //Chatbot
     implementation("com.google.ai.client.generativeai:generativeai:0.2.1")
 
+    implementation("com.google.firebase:firebase-messaging:23.4.1")
+
 
 }

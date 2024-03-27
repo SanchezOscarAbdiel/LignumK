@@ -1,10 +1,18 @@
+
 package com.example.lignumk
 import android.os.Bundle
 import ConexionFirebase
+import android.Manifest
 import android.animation.LayoutTransition
 import android.annotation.SuppressLint
+import android.app.AlarmManager
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.ContentValues.TAG
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.Handler
@@ -24,16 +32,23 @@ import java.io.FileNotFoundException
 import java.time.LocalDate
 import java.util.Calendar
 import android.util.Base64
+import android.widget.Toast
+import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.runtime.LaunchedEffect
+import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.lignumk.databinding.ActivityMenuPrincipalBinding
+import com.example.lignumk.ui.theme.LignumKTheme
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.common.reflect.TypeToken
 import com.google.gson.Gson
@@ -56,10 +71,12 @@ class MenuPrincipal : AppCompatActivity() {
     val contsto = this
     lateinit var binding: ActivityMenuPrincipalBinding
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMenuPrincipalBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
         taskViewModel = ViewModelProvider(this).get(TaskViewModel::class.java)
         VerificaPrimeraVez()
         setCardColor()
@@ -90,6 +107,17 @@ class MenuPrincipal : AppCompatActivity() {
         //binding.cardAnuncio.strokeWidth = 5
 
     }
+
+    fun notificacion(view: View){
+        val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val intent = Intent(this, AlarmReceiver::class.java)
+        val pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+
+        // Programar la alarma para que se dispare cada 24 horas
+        val interval: Long = 24 * 60 * 60 * 1000 // 24 horas en milisegundos
+        alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), interval, pendingIntent)
+    }
+
     var titulo = ""
     var descripcion = ""
     var puntos = ""

@@ -1,7 +1,10 @@
 package com.example.lignumk
 
+import android.app.AlarmManager
+import android.app.PendingIntent
 import android.content.Context
 import android.content.DialogInterface
+import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.BitmapFactory
 import android.os.Bundle
@@ -20,6 +23,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.getSystemService
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModelProvider
 import com.bumptech.glide.Glide
@@ -77,7 +81,22 @@ class Configuracion : BottomSheetDialogFragment() {
             }
         }
 
-        binding.SwitchNotificacion.setOnClickListener{
+        binding.SwitchNotificacion.setOnCheckedChangeListener{_, isChecked ->
+            val alarmManager = requireActivity().getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            val intent = Intent(requireActivity(), AlarmReceiver::class.java)
+            val pendingIntent = PendingIntent.getBroadcast(requireActivity(), 0, intent, PendingIntent.FLAG_IMMUTABLE)
+
+            if (isChecked) {
+                Toast.makeText(activity, "Notificaciones activadas", Toast.LENGTH_SHORT).show()
+                // Programar la alarma para que se dispare cada 24 horas
+                val interval: Long = 24 * 60 * 60 * 1000 // 24 horas en milisegundos
+                alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), interval, pendingIntent)
+            } else {
+                // Cancelar la alarma
+                Toast.makeText(activity, "Notificaciones desactivadas", Toast.LENGTH_SHORT).show()
+                alarmManager.cancel(pendingIntent)
+            }
+
             val jsonObject = JSONObject()
             jsonObject.put("coleccion", "Usuarios")
             jsonObject.put("documento", uid)

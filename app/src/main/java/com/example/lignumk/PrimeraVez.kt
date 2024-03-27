@@ -1,4 +1,5 @@
 package com.example.lignumk
+import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import android.content.Intent
@@ -38,15 +39,15 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.os.Build
-import android.widget.Button
-import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
 import java.util.Calendar
+import android.net.Uri
+import android.provider.Settings
+import android.util.TypedValue
+
+
 
 class PrimeraVez : AppCompatActivity() {
-    companion object {
-        const val MY_CHANNEL_ID = "myChannel"
-    }
+
     private val actividades = Actividades()
 
     private var esAut = false
@@ -63,6 +64,7 @@ class PrimeraVez : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityPrimeraVezBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
         auth = Firebase.auth
         actividadesMP.saveSharedPref(this,"first_run",false)
         pickMedia = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
@@ -87,7 +89,9 @@ class PrimeraVez : AppCompatActivity() {
         actividades.AsignarTareas(this,"diaria","Tareas") //Se lee el archivo y se extrae la tarea en el momento
 
         rellenaSpin()
+
     }
+
 
     fun seleccionaImagen(view: View) {
 
@@ -118,6 +122,24 @@ class PrimeraVez : AppCompatActivity() {
 
 
             try {
+                binding.switchNotification.setOnCheckedChangeListener{_, isChecked ->
+                    val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+                    val intent = Intent(this, AlarmReceiver::class.java)
+                    val pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+
+                    if (isChecked) {
+                        Toast.makeText(this, "Notificaciones activadas", Toast.LENGTH_SHORT).show()
+                        // Programar la alarma para que se dispare cada 24 horas
+                        val interval: Long = 24 * 60 * 60 * 1000 // 24 horas en milisegundos
+                        alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), interval, pendingIntent)
+                    } else {
+                        // Cancelar la alarma
+                        Toast.makeText(this, "Notificaciones desactivadas", Toast.LENGTH_SHORT).show()
+                        alarmManager.cancel(pendingIntent)
+                    }
+                }
+
+
                 cFirebase.PostData(jsonDatos)
 
                 //Habilita drawables dia de la semana
