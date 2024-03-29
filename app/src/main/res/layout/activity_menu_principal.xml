@@ -341,7 +341,6 @@
         android:layout_width="90dp"
         android:layout_height="95dp"
         android:layout_marginBottom="20dp"
-        android:onClick="notificacion"
         app:cardCornerRadius="20dp"
         app:cardElevation="10dp"
         app:contentPadding="20dp"
@@ -350,6 +349,12 @@
         app:layout_constraintHorizontal_bias="0.978"
         app:layout_constraintStart_toEndOf="@+id/cardOpciones"
         app:layout_constraintTop_toBottomOf="@id/cardTienda">
+
+        <ImageButton
+            android:id="@+id/IbInsignia"
+            android:layout_width="95dp"
+            android:layout_height="100dp"
+            android:background="@android:color/transparent" />
 
     </com.google.android.material.card.MaterialCardView>
 
@@ -406,7 +411,18 @@
         app:layout_constraintHorizontal_bias="0.529"
         app:layout_constraintStart_toEndOf="@id/cardLeaderboard"
         app:layout_constraintTop_toBottomOf="@id/cardTareasSemanales">
-
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/carouselLeaderboard"
+            android:layout_width="match_parent"
+            android:layout_height="170dp"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:orientation="horizontal"
+            android:paddingStart="1dp"
+            android:paddingEnd="1dp"
+            app:layoutManager="com.google.android.material.carousel.CarouselLayoutManager"
+            app:layout_constraintStart_toStartOf="@id/cardAnuncio"
+            app:layout_constraintTop_toTopOf="@id/cardAnuncio" />
     </com.google.android.material.card.MaterialCardView>
 
 

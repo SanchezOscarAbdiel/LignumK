@@ -84,6 +84,7 @@ class PrimeraVez : AppCompatActivity() {
         cFirebase.LeerDatos("Tareas", "tipo", "semanal", this)
         cFirebase.LeerDatos("Tienda", "tipo", "potenciador", this)
         cFirebase.LeerDatos("Tienda", "tipo", "estetica", this)
+        cFirebase.LeerDatos("Insignias","tipo","insignia",this)
 
         //AsignaTareas
         actividades.AsignarTareas(this,"diaria","Tareas") //Se lee el archivo y se extrae la tarea en el momento
@@ -118,8 +119,10 @@ class PrimeraVez : AppCompatActivity() {
             jsonObject.put("monedas", 0)
             jsonObject.put("racha", 0)
             jsonObject.put("respuestas", "")
+            jsonObject.put("fotoPerfil", actividades.sharedPref(this@PrimeraVez,"fotoPerfil",String::class.java))
+            jsonObject.put("tipoFoto",actividades.sharedPref(this@PrimeraVez,"tipoFoto",String::class.java))
             val jsonDatos = jsonObject.toString()
-
+            cFirebase.PostData(jsonDatos)
 
             try {
                 binding.switchNotification.setOnCheckedChangeListener{_, isChecked ->
@@ -139,9 +142,6 @@ class PrimeraVez : AppCompatActivity() {
                     }
                 }
 
-
-                cFirebase.PostData(jsonDatos)
-
                 //Habilita drawables dia de la semana
                 val diasSemana: Map<String, String> =
                     mapOf(
@@ -160,6 +160,7 @@ class PrimeraVez : AppCompatActivity() {
                 actividades.saveSharedPref(this@PrimeraVez,"SkinCompradas",R.color.seed.toString())
                 actividades.saveSharedPref(this@PrimeraVez, "tipoPotenciadorActivo", "no")
                 actividades.saveSharedPref(this@PrimeraVez, "potenciadorActivo", "no")
+                actividades.saveSharedPref(this@PrimeraVez,"InsigniaActiva","https://firebasestorage.googleapis.com/v0/b/lignumbd-b32e7.appspot.com/o/hojita.png?alt=media&token=60027732-7d2f-4c8d-873d-5b909d9de4ba")
             } catch (e: Exception) {
                 Log.e(TAG, "Error al actualizar los datos en Firebase", e)
             }

@@ -206,12 +206,24 @@ class Configuracion : BottomSheetDialogFragment() {
         pickMedia = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
             binding.IvFotoConfiguracion.scaleType = ImageView.ScaleType.CENTER_CROP
             binding.IvFotoConfiguracion.setImageURI(uri)
-            actividades.uriToBase64(activity,uri!!,"fotoPerfil")
+            val encodedImage = actividades.uriToBase64(activity,uri!!,"fotoPerfil")
+            actividades.saveSharedPref(activity,"fotoPerfil",encodedImage)
             actividades.saveSharedPref(activity,"tipoFoto","uri")
+
+            val jsonObject = JSONObject()
+            jsonObject.put("coleccion", "Usuarios")
+            jsonObject.put("documento", actividades.sharedPref(activity,"UID",String::class.java))
+            jsonObject.put("tipoFoto", actividades.sharedPref(activity,"tipoFoto",String::class.java))
+            jsonObject.put("fotoPerfil", actividades.sharedPref(activity,"fotoPerfil",String::class.java))
+            val jsonDatos = jsonObject.toString()
+
+            cFirebaseA.UpdateData(jsonDatos)
         }
 
         binding.IvFotoConfiguracion.setOnClickListener(){
             pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+
+
         }
     }
     override fun onCreateView(

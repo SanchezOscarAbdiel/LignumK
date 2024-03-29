@@ -32,6 +32,9 @@ import java.io.FileNotFoundException
 import java.time.LocalDate
 import java.util.Calendar
 import android.util.Base64
+import android.util.TypedValue
+import android.widget.FrameLayout
+import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
@@ -103,8 +106,21 @@ class MenuPrincipal : AppCompatActivity() {
             Log.d(getString(R.string.menuPrincipal), "pickMedia en OnCreate, con ${titulo}, ${puntos},")
             pickMedia = registerPickMedia()
 
-        //binding.cardAnuncio.strokeColor = Color.RED // Cambia esto al color de borde que prefieras
-        //binding.cardAnuncio.strokeWidth = 5
+        val iconoInsignia = actividades.sharedPref(this, "InsigniaActiva", String::class.java)
+        Log.d("Icono insignia","IconoInsignia: $iconoInsignia")
+        val fiftyDp = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 58f, this.resources.displayMetrics).toInt()
+        binding.IbInsignia.layoutParams = FrameLayout.LayoutParams(fiftyDp, fiftyDp)
+        Glide.with(this)
+            .load(iconoInsignia)
+            .centerCrop()
+            .into(binding.IbInsignia)
+        binding.IbInsignia.setOnClickListener{
+            actividadesMP.anuncio("Insignias","Desbloquea insignias juntando racha!\n" +
+                    "Realiza actividades todos los dias, cuando hagas varias actividades consecutivas" +
+                    "podrás ganar una insignia de merito.",this)
+        }
+
+        leaderBoard()
 
     }
 
@@ -436,11 +452,49 @@ Log.d("color", "ingresa a color: $col $colorSeed")
         actividadesMP.saveSharedPref(context, "actBotonEnviar", false)
         actividadesMP.saveSharedPref(context, "racha", racha!! + 1)
 
+        //Revisar si tiene una racha:
+        actividadesMP.Insignias(context)
+        val fiftyDp = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 75f, context.resources.displayMetrics).toInt()
+        binding.IbInsignia.layoutParams = FrameLayout.LayoutParams(fiftyDp, fiftyDp)
+        val iconoInsignia = actividades.sharedPref(context, "InsigniaActiva", String::class.java)
+
+// Cargar la imagen desde la URL en el "iconoInsignia" utilizando Glide
+        Glide.with(context)
+            .load(iconoInsignia)
+            .into(binding.IbInsignia)
+
         // Actualizar la interfaz de usuario con la notificación y el estado del botón
         binding.cTVnoti.text = actividadesMP.sharedPref(context, "actNotificacion", String::class.java)
         binding.btnEnviarActividad.isEnabled = actividadesMP.sharedPref(context, "actBotonEnviar", Boolean::class.java) == true
         binding.CargaCircular.isVisible = false
     }
+
+    data class Usuario(
+        val fotoPerfil: String,
+        val racha: Int
+    )
+
+    fun leaderBoard() {
+        val jsonUsuario = actividades.leeArchivo(this,"Usuarios")
+        val jsonUsuarioString = jsonUsuario.toString()
+        val listType = object : TypeToken<List<Usuario>>() {}.type
+        val items: List<Usuario> = Gson().fromJson(jsonUsuarioString , listType)
+
+        // Ordenar la lista de usuarios por la racha en orden descendente
+        val usuariosOrdenados = items.sortedByDescending { it.racha }
+
+        // Tomar solo los primeros tres usuarios de la lista ordenada
+        val primerosTresUsuarios = usuariosOrdenados.take(3)
+
+        // Crear una lista de pares (fotoPerfil, racha) de los tres usuarios con la racha más alta
+        val photoUrlsWithRacha = primerosTresUsuarios.map { Pair(it.fotoPerfil, it.racha) }
+
+        // Crear y asignar el adaptador del carrusel con la lista de pares (fotoPerfil, racha)
+        binding.carouselLeaderboard.adapter = CarouselAdapterLeader(imagesWithRacha = photoUrlsWithRacha)
+    }
+
+
+
 
     @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     override fun onStart() {

@@ -28,6 +28,7 @@ import android.widget.ArrayAdapter
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.work.Constraints
 import androidx.work.Data
 import androidx.work.NetworkType
@@ -38,6 +39,8 @@ import com.example.lignumk.databinding.ActivityMenuPrincipalBinding
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.content
 import com.google.android.material.progressindicator.LinearProgressIndicator
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -169,7 +172,7 @@ class Actividades{
         editor.apply()
     }
 
-    fun uriToBase64(contexto: Context,uri: Uri, shared:String){
+    fun uriToBase64(contexto: Context, uri: Uri, shared: String): String? {
         val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION or
                 Intent.FLAG_GRANT_WRITE_URI_PERMISSION
         try {
@@ -181,13 +184,16 @@ class Actividades{
         val inputStream = contexto.contentResolver.openInputStream(uri)
         var bitmap = BitmapFactory.decodeStream(inputStream)
         bitmap = resizeToSquare(bitmap)
-        val byteArrayOutputStream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.PNG, 50, byteArrayOutputStream)
-        val byteArray = byteArrayOutputStream.toByteArray()
-        val encodedImage = Base64.encodeToString(byteArray, Base64.DEFAULT)
 
-        saveSharedPref(contexto,shared,encodedImage)
+        // Reducir la calidad de compresión al comprimir la imagen como JPEG con calidad del 20%
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 20, byteArrayOutputStream)
+        val byteArray = byteArrayOutputStream.toByteArray()
+
+        val encodedImage = Base64.encodeToString(byteArray, Base64.DEFAULT)
+        return encodedImage
     }
+
     fun resizeToSquare(bitmap: Bitmap): Bitmap {
         val size = min(bitmap.width, bitmap.height)
         val x = (bitmap.width - size) / 2
@@ -520,6 +526,40 @@ class Actividades{
         }
         return if (objetoBuscado != null || opciones != null) Pair(objetoBuscado, opciones) else null
     }
+    data class ItemInsignias(
+        val icono: String,
+        val limite: Int,
+        val nombre: String
+    )
+
+    fun anuncio(titulo: String, descripcion: String, contexto: Context){
+        MaterialAlertDialogBuilder(contexto)
+            .setTitle(titulo)
+            .setMessage(descripcion)
+            .setPositiveButton("Aceptar") { dialog, _ ->
+            dialog.dismiss()
+            }
+            .show()
+    }
+    fun Insignias(contexto: Context) {
+        val racha = sharedPref(contexto, "racha", Int::class.java)
+        val json = leeArchivo(contexto, "Insignias")
+        val jsonString = json.toString()
+        val listType = object : TypeToken<List<ItemInsignias>>() {}.type
+        val items: List<ItemInsignias> = Gson().fromJson(jsonString, listType)
+
+        for (item in items) {
+            if (racha == item.limite) {
+                anuncio("Nueva insignia!","Desbloqueaste la insignia de ${item.nombre} " +
+                        "por haber tenido una racha de $racha dias\n\nSigue así!",contexto)
+                // Guardar el valor de la clave "icono" en la preferencia compartida
+                actividades.saveSharedPref(contexto, "InsigniaActiva", item.icono)
+                break // Salir del bucle si se encuentra una coincidencia
+            }
+        }
+    }
+
+
     fun sincronizaTareas(): Long {
         val currentTime = Calendar.getInstance().get(Calendar.HOUR_OF_DAY) // Hora actual
         val desiredHour = 7 // Hora deseada (7 AM)
