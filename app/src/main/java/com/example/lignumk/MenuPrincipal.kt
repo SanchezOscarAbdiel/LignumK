@@ -54,8 +54,11 @@ import com.example.lignumk.databinding.ActivityMenuPrincipalBinding
 import com.example.lignumk.ui.theme.LignumKTheme
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.common.reflect.TypeToken
+import com.google.firebase.auth.FirebaseAuth
 import com.google.gson.Gson
 import java.lang.NullPointerException
+import java.time.format.DateTimeFormatter
+import java.util.Date
 import kotlin.properties.Delegates
 
 val cFirebase = ConexionFirebase()
@@ -73,7 +76,7 @@ class MenuPrincipal : AppCompatActivity() {
     private var firstRun by Delegates.notNull<Boolean>()
     val contsto = this
     lateinit var binding: ActivityMenuPrincipalBinding
-
+    private lateinit var auth: FirebaseAuth
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -469,6 +472,48 @@ Log.d("color", "ingresa a color: $col $colorSeed")
         binding.CargaCircular.isVisible = false
     }
 
+    data class UsuarioRetro(
+        val UID: String,
+        val Ddescanso: String,
+        val racha: Int
+    )
+    suspend fun retroalimentacion(view: View){
+        val user = FirebaseAuth.getInstance().currentUser
+        val lastSignInTimestamp = user?.metadata?.lastSignInTimestamp
+
+// Convertir el timestamp a una fecha
+        val lastSignInDate = lastSignInTimestamp?.let { Date(it) }
+
+        val hoy = LocalDate.now()
+        val formato = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+        val fechaComoCadena = hoy.format(formato)
+
+        val jsonUsuario = actividades.leeArchivo(this,"Usuarios")
+        val jsonUsuarioString = jsonUsuario.toString()
+        val listType = object : TypeToken<List<UsuarioRetro>>() {}.type
+        val items: List<UsuarioRetro> = Gson().fromJson(jsonUsuarioString , listType)
+
+        val uid = actividadesMP.sharedPref(this,"UID", String::class.java)
+        val promedio = actividadesMP.sharedPref(this,"promedio",Float::class.java)
+        var descansos = ""
+        var racha = 0
+        for(item in items){
+            if(item.UID == uid){
+                descansos = item.Ddescanso
+                racha = item.racha
+                break
+            }
+        }
+        val generativeModel = actividadesMP.modeloIA("gemini-pro")
+
+        val prompt = "${R.string.retroalimentacion} racha (numero de actividades realizadas): $racha," +
+                "primera vez que accedió a la aplicacion: $lastSignInDate, hoy: $fechaComoCadena," +
+                "dias de descanso (no se hacen actividades): $descansos," +
+                "calificacion promediada sobre 100 de todas las actividades realizadas: $promedio"
+
+        generativeModel.generateContent(prompt) .text?.let { actividadesMP.anuncio("SAM dice:",it,this) }
+    }
+
     data class Usuario(
         val fotoPerfil: String,
         val racha: Int
@@ -482,7 +527,6 @@ Log.d("color", "ingresa a color: $col $colorSeed")
 
         // Ordenar la lista de usuarios por la racha en orden descendente
         val usuariosOrdenados = items.sortedByDescending { it.racha }
-
         // Tomar solo los primeros tres usuarios de la lista ordenada
         val primerosTresUsuarios = usuariosOrdenados.take(3)
 

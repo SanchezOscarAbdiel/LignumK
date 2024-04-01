@@ -80,6 +80,7 @@ class PrimeraVez : AppCompatActivity() {
         googleSignInClient = GoogleSignIn.getClient(this, gso)
 
         //DescargaArchivosSingingGoogle
+        cFirebase.LeerDatos("Usuarios", "tipo", "Empleado", this)
         cFirebase.LeerDatos("Tareas", "tipo", "diaria", this)
         cFirebase.LeerDatos("Tareas", "tipo", "semanal", this)
         cFirebase.LeerDatos("Tienda", "tipo", "potenciador", this)
@@ -121,6 +122,7 @@ class PrimeraVez : AppCompatActivity() {
             jsonObject.put("respuestas", "")
             jsonObject.put("fotoPerfil", actividades.sharedPref(this@PrimeraVez,"fotoPerfil",String::class.java))
             jsonObject.put("tipoFoto",actividades.sharedPref(this@PrimeraVez,"tipoFoto",String::class.java))
+            jsonObject.put("promedio", 0)
             val jsonDatos = jsonObject.toString()
             cFirebase.PostData(jsonDatos)
 
@@ -161,6 +163,7 @@ class PrimeraVez : AppCompatActivity() {
                 actividades.saveSharedPref(this@PrimeraVez, "tipoPotenciadorActivo", "no")
                 actividades.saveSharedPref(this@PrimeraVez, "potenciadorActivo", "no")
                 actividades.saveSharedPref(this@PrimeraVez,"InsigniaActiva","https://firebasestorage.googleapis.com/v0/b/lignumbd-b32e7.appspot.com/o/hojita.png?alt=media&token=60027732-7d2f-4c8d-873d-5b909d9de4ba")
+                actividades.saveSharedPref(this@PrimeraVez,"promedio",0f)
             } catch (e: Exception) {
                 Log.e(TAG, "Error al actualizar los datos en Firebase", e)
             }

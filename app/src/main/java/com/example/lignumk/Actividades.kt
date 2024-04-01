@@ -69,7 +69,7 @@ class Actividades{
         return JSONArray(contenido)
     }
 
-    private fun modeloIA(model: String): GenerativeModel {
+    fun modeloIA(model: String): GenerativeModel {
         return GenerativeModel(
             modelName = model,
             apiKey = "AIzaSyDo5BH4jyyrGS28OIpMTdpTL-Zx3oVGKbI"
@@ -85,7 +85,7 @@ class Actividades{
                 "'${respuesta}'. puntua su respuesta con un rango de 0 a '${puntos}' (escribe asi: -x/${puntos}-) " +
                 "y escribe un dato curioso corto corto acerca del tema y su respuesta"
 
-        generativeModel.generateContent(prompt) .text?.let { popRetroalimentacion(contexto, it, titulo,progressIndicator,"diaria", binding) }
+        generativeModel.generateContent(prompt) .text?.let { popRetroalimentacion(contexto, it, titulo,progressIndicator,"diaria", binding, puntos.toInt()) }
     }
 
     private suspend fun samAIEncuesta(contexto: Context, titulo: String, descripcion: String, respuesta: String, puntos:String, progressIndicator:LinearProgressIndicator, tipo: String, binding: ActivityMenuPrincipalBinding) {
@@ -97,7 +97,7 @@ class Actividades{
                 "'${respuesta}'.escribe: -${puntos}/${puntos}-(ejemplo: -5/10-) " +
                 "y escribe un pequeño comentario constructivo en base a sus respuestas"
 
-        generativeModel.generateContent(prompt) .text?.let { popRetroalimentacion(contexto, it, titulo,progressIndicator,tipo, binding) }
+        generativeModel.generateContent(prompt) .text?.let { popRetroalimentacion(contexto, it, titulo,progressIndicator,tipo, binding, puntos.toInt()) }
     }
 
     private suspend fun samAISeleccion(contexto: Context, titulo: String, descripcion: String, respuesta: String, opcionCorrecta:String, puntos:String, progressIndicator: LinearProgressIndicator, binding: ActivityMenuPrincipalBinding) {
@@ -111,7 +111,7 @@ class Actividades{
                 "(escribe asi: -x/${puntos}-) y escribe un dato curioso corto acerca del tema o su respuesta " +
                 "que incite el uso de equipo de seguridad a pesar de no querer"
 
-        generativeModel.generateContent(prompt) .text?.let { popRetroalimentacion(contexto, it, titulo,progressIndicator,"diaria", binding) }
+        generativeModel.generateContent(prompt) .text?.let { popRetroalimentacion(contexto, it, titulo,progressIndicator,"diaria", binding, puntos.toInt()) }
     }
 
     private suspend fun samAIimagen(contexto: Context, titulo: String, descripcion: String, respuesta: String, puntos: String, progressIndicator: LinearProgressIndicator, binding: ActivityMenuPrincipalBinding, tipo: String){
@@ -141,7 +141,7 @@ class Actividades{
             Log.d(contexto.getString(R.string.actividades), "samImage -> popRetroalimentacion  \n" +
                     "con ${titulo}, ${puntos}, $tipo, \n $it")
 
-            popRetroalimentacion(contexto, it, titulo,progressIndicator,tipo,binding) }
+            popRetroalimentacion(contexto, it, titulo,progressIndicator,tipo,binding, puntos.toInt()) }
 
     }
 
@@ -164,6 +164,7 @@ class Actividades{
         when (valor) {
             is String -> editor.putString(variable, valor)
             is Int -> editor.putInt(variable, valor)
+            is Float -> editor.putFloat(variable, valor)
             is Boolean -> editor.putBoolean(variable, valor)
             is Long -> editor.putLong(variable, valor)
             else -> throw IllegalArgumentException("Tipo no soportado")
@@ -269,7 +270,7 @@ class Actividades{
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false
     }
 
-    private fun popRetroalimentacion(contexto: Context, result: String, titulo: String, progressIndicator: LinearProgressIndicator, tipo: String, binding: ActivityMenuPrincipalBinding) {
+    private fun popRetroalimentacion(contexto: Context, result: String, titulo: String, progressIndicator: LinearProgressIndicator, tipo: String, binding: ActivityMenuPrincipalBinding, puntosTotales: Int) {
         Log.d(contexto.getString(R.string.actividades), "popRetroalimentacion llega con " +
                 " ${result},\n ${titulo}, $tipo")
 
@@ -291,7 +292,7 @@ class Actividades{
                             "popRetroalimentacion -> actualizaActividad" +
                                     "con diaria $number"
                         )
-                        actualizaActividad(contexto, number, binding)
+                        actualizaActividad(contexto, number, binding, puntosTotales)
                     }else {
                         Log.d(contexto.getString(R.string.actividades), "popRetroalimentacion -> actualizaActividad" +
                                 "con semanal ${number}, $titulo")
@@ -360,7 +361,7 @@ class Actividades{
         cMenuPrincipal.auxSemanal(contexto,uid, binding)
     }
 
-    fun actualizaActividad(contexto: Context, puntos: String,binding: ActivityMenuPrincipalBinding){
+    fun actualizaActividad(contexto: Context, puntos: String,binding: ActivityMenuPrincipalBinding, puntosTotales: Int){
         var Puntos = 0
         val potenciador = sharedPref(contexto,"potenciadorActivo", String::class.java)!!
         Puntos = if (potenciador == "Astillas")
@@ -369,7 +370,13 @@ class Actividades{
             puntos.toInt()
 
         val uid = sharedPref(contexto,"UID",String::class.java)
-        val racha = sharedPref(contexto,"racha",Int::class.java)
+        var racha = sharedPref(contexto,"racha",Int::class.java) ?: 1
+        var promedio = sharedPref(contexto, "promedio", Float::class.java) ?: 0f
+
+        racha += 1
+        var promActividad = (puntos.toInt()/puntosTotales) * 100
+        promedio = ( (promedio*(racha-1))+promActividad )/racha
+        saveSharedPref(contexto,"promedio", promedio)
 
         val json = actividadesMP.leeArchivo(contexto,"Usuarios")
         var monedas : Int =  objetoBuscado(json,uid!!,"monedas",Int::class)?.plus(Puntos) ?: 0
@@ -379,7 +386,8 @@ class Actividades{
         jsonObject.put("coleccion", "Usuarios")
         jsonObject.put("documento", uid)
         jsonObject.put("monedas",monedas)
-        jsonObject.put("racha",racha!!+1)
+        jsonObject.put("racha",racha)
+        jsonObject.put("promedio",promedio)
         val jsonDatos = jsonObject.toString()
 
         cFirebaseA.UpdateData(jsonDatos)
