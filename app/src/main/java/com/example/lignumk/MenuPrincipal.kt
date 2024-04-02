@@ -2,17 +2,14 @@
 package com.example.lignumk
 import android.os.Bundle
 import ConexionFirebase
-import android.Manifest
 import android.animation.LayoutTransition
 import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.content.ContentValues.TAG
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.Handler
@@ -34,31 +31,28 @@ import java.util.Calendar
 import android.util.Base64
 import android.util.TypedValue
 import android.widget.FrameLayout
-import android.widget.LinearLayout
-import android.widget.Toast
-import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.runtime.LaunchedEffect
-import androidx.core.app.ActivityCompat
-import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.lignumk.databinding.ActivityMenuPrincipalBinding
-import com.example.lignumk.ui.theme.LignumKTheme
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.common.reflect.TypeToken
 import com.google.firebase.auth.FirebaseAuth
 import com.google.gson.Gson
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import okhttp3.internal.notifyAll
 import java.lang.NullPointerException
 import java.time.format.DateTimeFormatter
 import java.util.Date
+import java.util.Locale
 import kotlin.properties.Delegates
 
 val cFirebase = ConexionFirebase()
@@ -87,6 +81,7 @@ class MenuPrincipal : AppCompatActivity() {
         VerificaPrimeraVez()
         setCardColor()
         setDiasSemana(this)
+        auth = Firebase.auth
         binding.CargaCircular.isVisible = false
         binding.progressIndicator.visibility = View.GONE
         binding.BotonSemanal.isEnabled = actividadesMP.sharedPref(this, "BotonSemanal",Boolean::class.java)!!
@@ -125,15 +120,31 @@ class MenuPrincipal : AppCompatActivity() {
 
         leaderBoard()
 
+        createNotificationChannel()
     }
 
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val name = "canal"
+            val descriptionText = "descripcion"
+            val importance = NotificationManager.IMPORTANCE_DEFAULT
+            val channel = NotificationChannel("CHANNEL_ID", name, importance).apply {
+                description = descriptionText
+            }
+            val notificationManager: NotificationManager =
+                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
+
+
     fun notificacion(view: View){
-        val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val intent = Intent(this, AlarmReceiver::class.java)
+        val alarmManager = applicationContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val intent = Intent(applicationContext, AlarmReceiver::class.java)
         val pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
 
         // Programar la alarma para que se dispare cada 24 horas
-        val interval: Long = 24 * 60 * 60 * 1000 // 24 horas en milisegundos
+        val interval: Long = 5000 // 24 horas en milisegundos
         alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), interval, pendingIntent)
     }
 
@@ -477,41 +488,57 @@ Log.d("color", "ingresa a color: $col $colorSeed")
         val Ddescanso: String,
         val racha: Int
     )
-    suspend fun retroalimentacion(view: View){
-        val user = FirebaseAuth.getInstance().currentUser
-        val lastSignInTimestamp = user?.metadata?.lastSignInTimestamp
 
+    fun retroalimentacion(view: View) {
+        val user = FirebaseAuth.getInstance().currentUser
+
+        user?.sendEmailVerification()
+            ?.addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    Log.d("TAG", "Email sent.")
+                }
+            }
+
+
+        binding.progressIndicator.visibility = View.VISIBLE
+        val lastSignInTimestamp =
+            auth.currentUser?.metadata?.creationTimestamp
+
+        Log.d("xd", "lastSingInTimeStamp: $lastSignInTimestamp.")
 // Convertir el timestamp a una fecha
-        val lastSignInDate = lastSignInTimestamp?.let { Date(it) }
+        val lastSignInDate = lastSignInTimestamp?.let {
+            Date(it)
+        }
+
+        Log.d("xd", "lastSingInDate: $lastSignInDate")
 
         val hoy = LocalDate.now()
         val formato = DateTimeFormatter.ofPattern("dd/MM/yyyy")
         val fechaComoCadena = hoy.format(formato)
 
-        val jsonUsuario = actividades.leeArchivo(this,"Usuarios")
+        val jsonUsuario = actividades.leeArchivo(this, "Usuarios")
+        Log.d("fecha", "fecha como cade: $jsonUsuario")
         val jsonUsuarioString = jsonUsuario.toString()
         val listType = object : TypeToken<List<UsuarioRetro>>() {}.type
-        val items: List<UsuarioRetro> = Gson().fromJson(jsonUsuarioString , listType)
+        val items: List<UsuarioRetro> = Gson().fromJson(jsonUsuarioString, listType)
 
-        val uid = actividadesMP.sharedPref(this,"UID", String::class.java)
-        val promedio = actividadesMP.sharedPref(this,"promedio",Float::class.java)
+        val uid = actividadesMP.sharedPref(this, "UID", String::class.java)
+        val promedio = actividadesMP.sharedPref(this, "promedio", Float::class.java)!!
         var descansos = ""
         var racha = 0
-        for(item in items){
-            if(item.UID == uid){
-                descansos = item.Ddescanso
-                racha = item.racha
-                break
-            }
+
+       for (item in items) {
+           if (item.UID == uid) {
+               descansos = item.Ddescanso
+               racha = item.racha
+               break
+           }
+       }
+
+        CoroutineScope(Dispatchers.Main).launch {
+            actividadesMP.samAIRetro(this@MenuPrincipal,racha,lastSignInDate,fechaComoCadena,descansos,promedio, binding.progressIndicator)
         }
-        val generativeModel = actividadesMP.modeloIA("gemini-pro")
 
-        val prompt = "${R.string.retroalimentacion} racha (numero de actividades realizadas): $racha," +
-                "primera vez que accedió a la aplicacion: $lastSignInDate, hoy: $fechaComoCadena," +
-                "dias de descanso (no se hacen actividades): $descansos," +
-                "calificacion promediada sobre 100 de todas las actividades realizadas: $promedio"
-
-        generativeModel.generateContent(prompt) .text?.let { actividadesMP.anuncio("SAM dice:",it,this) }
     }
 
     data class Usuario(
@@ -537,8 +564,59 @@ Log.d("color", "ingresa a color: $col $colorSeed")
         binding.carouselLeaderboard.adapter = CarouselAdapterLeader(imagesWithRacha = photoUrlsWithRacha)
     }
 
+    data class UsuarioDescanso(
+        val UID: String,
+        val Ddescanso: String
+    )
+    private fun asignaDescanso(){
+        val jsonUsuario = actividades.leeArchivo(this,"Usuarios")
+        val jsonUsuarioString = jsonUsuario.toString()
+        val listType = object : TypeToken<List<UsuarioDescanso>>() {}.type
+        val items: List<UsuarioDescanso> = Gson().fromJson(jsonUsuarioString , listType)
 
+        var descanso = ""
+        for(item in items){
+            if (item.UID == actividadesMP.sharedPref(this,"UID",String::class.java)){
+                descanso = item.Ddescanso
+                break
+            }
+        }
 
+        val diasDeLaSemana = mapOf("Lunes" to 0, "Martes" to 1, "Miercoles" to 2, "Jueves" to 3, "Viernes" to 4, "Sabado" to 5, "Domingo" to 6)
+        val imageViews = arrayOf(
+            binding.IvLunes, binding.IvMartes, binding.IvMiercoles,
+            binding.IvJueves, binding.IvViernes, binding.IvSabado, binding.IvDomingo
+        )
+        val drawables = arrayOf(
+            R.drawable.lunesbien, R.drawable.martesbien, R.drawable.miercolesbien,
+            R.drawable.juevesbien, R.drawable.viernesbien, R.drawable.sabadobien, R.drawable.domingobien
+        )
+
+// Parse the descanso string to a list of days
+        val diasDeDescanso = descanso.removeSurrounding("[", "]").split(", ")
+        val dias = listOf("IvLunes", "IvMartes", "IvMiercoles", "IvJueves", "IvViernes", "IvSabado", "IvDomingo")
+
+        val jsonString = actividadesMP.sharedPref(this, "diasSemana", String::class.java)
+        val type = object : TypeToken<Map<String, String>>() {}.type
+        val recuperadoMap: Map<String, String> = Gson().fromJson(jsonString, type)
+        val mutableMap = recuperadoMap.toMutableMap()
+
+        for (dia in diasDeDescanso) {
+            val indice = diasDeLaSemana[dia.trim()]
+            if (indice != null) {
+                // Actualizar el ImageView y SharedPreferences
+                imageViews[indice].setImageResource(drawables[indice])
+                val nombreDelDia = "Iv" + dias[indice].replaceFirstChar { if (it.isLowerCase()) it.titlecase(
+                    Locale.getDefault()) else it.toString() }
+                mutableMap[nombreDelDia] =  "${dias[indice]}bien"
+            }
+        }
+
+        // Guardar el mapa actualizado en SharedPreferences
+        val nuevoJsonString = Gson().toJson(mutableMap.toMap())
+        actividadesMP.saveSharedPref(this, "diasSemana", nuevoJsonString)
+
+    }
 
     @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     override fun onStart() {
@@ -588,6 +666,8 @@ Log.d("color", "ingresa a color: $col $colorSeed")
                 //Tarea semanal
                 actMenu.AsignarTareas(this,"semanal","Tareassemanal")
 
+                asignaDescanso()
+
             }else{
                 val dias = listOf("IvLunes", "IvMartes", "IvMiercoles",
                     "IvJueves", "IvViernes", "IvSabado", "IvDomingo")
@@ -607,6 +687,8 @@ Log.d("color", "ingresa a color: $col $colorSeed")
                     actividadesMP.saveSharedPref(contsto,"diasSemana",nuevoJsonString)
                 }
             }
+
+
         }
 
         //-----------------------

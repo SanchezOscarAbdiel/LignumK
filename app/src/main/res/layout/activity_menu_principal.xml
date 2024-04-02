@@ -386,15 +386,21 @@
         android:layout_height="190dp"
         android:layout_marginTop="20dp"
         android:layout_marginBottom="40dp"
+        android:onClick="retroalimentacion"
         app:cardCornerRadius="20dp"
         app:cardElevation="10dp"
-        android:onClick="retroalimentacion"
         app:contentPadding="20dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@id/cardAnuncio"
         app:layout_constraintHorizontal_bias="0.663"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/cardTareasSemanales">
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@drawable/sam_ai"
+            android:scaleType="centerCrop"/>
 
     </com.google.android.material.card.MaterialCardView>
 
@@ -404,6 +410,7 @@
         android:layout_height="190dp"
         android:layout_marginTop="28dp"
         android:layout_marginBottom="40dp"
+        android:onClick="notificacion"
         app:cardCornerRadius="40dp"
         app:cardElevation="10dp"
         app:contentPadding="20dp"
@@ -412,6 +419,7 @@
         app:layout_constraintHorizontal_bias="0.529"
         app:layout_constraintStart_toEndOf="@id/cardLeaderboard"
         app:layout_constraintTop_toBottomOf="@id/cardTareasSemanales">
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/carouselLeaderboard"
             android:layout_width="match_parent"

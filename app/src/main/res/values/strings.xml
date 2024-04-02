@@ -72,9 +72,14 @@
     <string name="retroalimentacion">Lignum es una aplicacion tipo duolingo pero enfocada al correcto
         uso del equipo de seguridad personal.\nA los trabajadores se les asigna una actividad relacionada a
         una accion que fomente el uso constante del equipo de seguridad\npor ejemplo, tomar una foto del
-        lugar de trabajo e identificar los posibles riesgos, contestar una encuesta, etc...\nA continuacion se
+        lugar de trabajo e identificar los posibles riesgos, contestar una encuesta, etc…\nA continuacion se
         te proporcionarán los datos de un trabajador y en base a ellos deberás dar una puntuacion sobre 100 de su desempeño
-        \ademas de brindar retroalimentacion que haga alusion al correcto uso del equipo de seguridad o de como aumentar dicha puntuacion</string>
+        \ademas de brindar retroalimentacion que haga alusion al correcto uso del equipo de seguridad o de como aumentar dicha puntuacion
+    recuerda que la racha debe de tener un numero similar a los dias que pasaron entre que el trabajador entró por primera vez a la app
+    y hoy, en caso contrario no está usando la aplicacion correctamente y eso amerita una amonestacion
+    , por ejemplo, si pasaron 100 dias desde que entró por primera vez hasta hoy, pero su racha es de 50\n
+    ademas, si las calificaciones promediadas está por debajo del 70% se considera como ineficiente, recuerda
+    dirigirte cordialmente hacia el usuario, ademas de usar pocas palabras, no mas de 50</string>
     <!-- Identificadores de clases -->
 
 </resources>

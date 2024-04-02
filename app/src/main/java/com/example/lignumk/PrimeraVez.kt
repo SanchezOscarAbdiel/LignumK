@@ -135,7 +135,7 @@ class PrimeraVez : AppCompatActivity() {
                     if (isChecked) {
                         Toast.makeText(this, "Notificaciones activadas", Toast.LENGTH_SHORT).show()
                         // Programar la alarma para que se dispare cada 24 horas
-                        val interval: Long = 24 * 60 * 60 * 1000 // 24 horas en milisegundos
+                        val interval: Long = 72000000// 24 horas en milisegundos
                         alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), interval, pendingIntent)
                     } else {
                         // Cancelar la alarma

@@ -28,7 +28,6 @@ import android.widget.ArrayAdapter
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-import android.widget.Toast
 import androidx.work.Constraints
 import androidx.work.Data
 import androidx.work.NetworkType
@@ -48,6 +47,7 @@ import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.io.FileNotFoundException
 import java.util.Calendar
+import java.util.Date
 import java.util.concurrent.TimeUnit
 import kotlin.math.min
 import kotlin.reflect.KClass
@@ -74,6 +74,35 @@ class Actividades{
             modelName = model,
             apiKey = "AIzaSyDo5BH4jyyrGS28OIpMTdpTL-Zx3oVGKbI"
         )
+    }
+
+    suspend fun samAIRetro(
+        contexto: Context,
+        racha: Int,
+        lastSignInDate: Date?,
+        fechaComoCadena: String,
+        descansos: String,
+        promedio: Float,
+        progressIndicator: LinearProgressIndicator
+    ) {
+        val generativeModel = modeloIA("gemini-pro")
+
+        val prompt =
+            "${contexto.getString(R.string.retroalimentacion)} racha (numero de actividades realizadas): $racha," +
+                    "primera vez que accedió a la aplicacion: $lastSignInDate, hoy: $fechaComoCadena," +
+                    "dias de descanso (no se hacen actividades): $descansos," +
+                    "calificacion promediada sobre 100 de todas las actividades realizadas: $promedio/100"
+
+
+        Log.d("prompt",prompt)
+        generativeModel.generateContent(prompt).text?.let {
+            progressIndicator.visibility = View.GONE
+            actividadesMP.anuncio(
+                "SAM dice:",
+                it,
+                contexto
+            )
+        }
     }
 
     private suspend fun samAItexto(contexto: Context, titulo: String, descripcion: String, respuesta: String, puntos:String, progressIndicator:LinearProgressIndicator, binding: ActivityMenuPrincipalBinding) {
@@ -153,6 +182,7 @@ class Actividades{
             Int::class.java -> sharedPref.getInt(variable, 0) as T?
             Boolean::class.java -> sharedPref.getBoolean(variable, true) as T?
             Long::class.java -> sharedPref.getLong(variable, 0) as T?
+            Float::class.java -> sharedPref.getFloat(variable, 0f) as T?
             else -> null
         }
     }

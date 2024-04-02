@@ -12,10 +12,10 @@ import androidx.core.app.NotificationManagerCompat
 class AlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val builder = NotificationCompat.Builder(context, "CHANNEL_ID")
-            .setSmallIcon(R.drawable.lignumlogo)
-            .setContentTitle("Se te va el tren...")
-            .setContentText("¿Ya hiciste tu actividad de hoy?")
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setSmallIcon(R.drawable.google)
+            .setContentTitle("Sam te vigila...")
+            .setContentText("¿Ya hiciste tu actividad de hoy? \nA menos que sea tu dia de descanso, claro...")
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
 
         val notificationManager = NotificationManagerCompat.from(context)
 
