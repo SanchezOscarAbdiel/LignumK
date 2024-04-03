@@ -164,6 +164,7 @@ class PrimeraVez : AppCompatActivity() {
                 actividades.saveSharedPref(this@PrimeraVez, "potenciadorActivo", "no")
                 actividades.saveSharedPref(this@PrimeraVez,"InsigniaActiva","https://firebasestorage.googleapis.com/v0/b/lignumbd-b32e7.appspot.com/o/hojita.png?alt=media&token=60027732-7d2f-4c8d-873d-5b909d9de4ba")
                 actividades.saveSharedPref(this@PrimeraVez,"promedio",0f)
+                actividades.saveSharedPref(this@PrimeraVez, "dDescanso", chipsSeleccionados.toString())
             } catch (e: Exception) {
                 Log.e(TAG, "Error al actualizar los datos en Firebase", e)
             }

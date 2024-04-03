@@ -49,6 +49,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import okhttp3.internal.notifyAll
+import org.json.JSONObject
 import java.lang.NullPointerException
 import java.time.format.DateTimeFormatter
 import java.util.Date
@@ -468,7 +469,7 @@ Log.d("color", "ingresa a color: $col $colorSeed")
 
         //Revisar si tiene una racha:
         actividadesMP.Insignias(context)
-        val fiftyDp = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 75f, context.resources.displayMetrics).toInt()
+        val fiftyDp = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 65f, context.resources.displayMetrics).toInt()
         binding.IbInsignia.layoutParams = FrameLayout.LayoutParams(fiftyDp, fiftyDp)
         val iconoInsignia = actividades.sharedPref(context, "InsigniaActiva", String::class.java)
 
@@ -490,16 +491,6 @@ Log.d("color", "ingresa a color: $col $colorSeed")
     )
 
     fun retroalimentacion(view: View) {
-        val user = FirebaseAuth.getInstance().currentUser
-
-        user?.sendEmailVerification()
-            ?.addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    Log.d("TAG", "Email sent.")
-                }
-            }
-
-
         binding.progressIndicator.visibility = View.VISIBLE
         val lastSignInTimestamp =
             auth.currentUser?.metadata?.creationTimestamp
@@ -564,58 +555,66 @@ Log.d("color", "ingresa a color: $col $colorSeed")
         binding.carouselLeaderboard.adapter = CarouselAdapterLeader(imagesWithRacha = photoUrlsWithRacha)
     }
 
-    data class UsuarioDescanso(
-        val UID: String,
-        val Ddescanso: String
-    )
+
     private fun asignaDescanso(){
-        val jsonUsuario = actividades.leeArchivo(this,"Usuarios")
-        val jsonUsuarioString = jsonUsuario.toString()
-        val listType = object : TypeToken<List<UsuarioDescanso>>() {}.type
-        val items: List<UsuarioDescanso> = Gson().fromJson(jsonUsuarioString , listType)
+        val descanso = actividadesMP.sharedPref(this,"dDescanso",String::class.java)!!
 
-        var descanso = ""
-        for(item in items){
-            if (item.UID == actividadesMP.sharedPref(this,"UID",String::class.java)){
-                descanso = item.Ddescanso
-                break
+        val diaDeLaSemana = LocalDate.now().dayOfWeek.value
+        val diasDeDescanso = descanso.removeSurrounding("[", "]").split(", ").map { it.lowercase() }
+
+// Mapa para convertir el valor numérico del día de la semana a texto
+        val diasDeLaSemanaMap = mapOf(1 to "lunes", 2 to "martes", 3 to "miercoles", 4 to "jueves", 5 to "viernes", 6 to "sabado", 7 to "domingo")
+Log.d("dia", "dia de descanso: $diaDeLaSemana")
+        if(diaDeLaSemana == 1) {
+            val jsonString = actividadesMP.sharedPref(this, "diasSemana", String::class.java)
+            val type = object : TypeToken<Map<String, String>>() {}.type
+            val recuperadoMap: Map<String, String> = Gson().fromJson(jsonString, type)
+            val mutableMap = recuperadoMap.toMutableMap()
+
+// Recorre los días de descanso
+            for (dia in diasDeDescanso) {
+                // Actualiza el drawable correspondiente en el mapa mutable
+                mutableMap["Iv${dia.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }}"] =
+                    "${dia}bien"
             }
+
+// Convierte el mapa mutable a JSON y guárdalo en SharedPreferences
+            val nuevoJsonString = Gson().toJson(mutableMap)
+            actividadesMP.saveSharedPref(this, "diasSemana", nuevoJsonString)
+
+            val racha = actividadesMP.sharedPref(this, "racha", Int::class.java)
+            actividadesMP.saveSharedPref(this, "racha", racha!! + 2)
+
+            //Revisar si tiene una racha:
+            actividadesMP.Insignias(this)
+            val fiftyDp = TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP,
+                65f,
+                this.resources.displayMetrics
+            ).toInt()
+            binding.IbInsignia.layoutParams = FrameLayout.LayoutParams(fiftyDp, fiftyDp)
+            val iconoInsignia = actividades.sharedPref(this, "InsigniaActiva", String::class.java)
+
+// Cargar la imagen desde la URL en el "iconoInsignia" utilizando Glide
+            Glide.with(this)
+                .load(iconoInsignia)
+                .into(binding.IbInsignia)
+
+            val uid = actividadesMP.sharedPref(this, "UID", String::class.java)
+            val jsonObject = JSONObject()
+            jsonObject.put("coleccion", "Usuarios")
+            jsonObject.put("documento", uid)
+            jsonObject.put("racha", racha + 2)
+            val jsonDatos = jsonObject.toString()
+
+            cFirebaseA.UpdateData(jsonDatos)
         }
-
-        val diasDeLaSemana = mapOf("Lunes" to 0, "Martes" to 1, "Miercoles" to 2, "Jueves" to 3, "Viernes" to 4, "Sabado" to 5, "Domingo" to 6)
-        val imageViews = arrayOf(
-            binding.IvLunes, binding.IvMartes, binding.IvMiercoles,
-            binding.IvJueves, binding.IvViernes, binding.IvSabado, binding.IvDomingo
-        )
-        val drawables = arrayOf(
-            R.drawable.lunesbien, R.drawable.martesbien, R.drawable.miercolesbien,
-            R.drawable.juevesbien, R.drawable.viernesbien, R.drawable.sabadobien, R.drawable.domingobien
-        )
-
-// Parse the descanso string to a list of days
-        val diasDeDescanso = descanso.removeSurrounding("[", "]").split(", ")
-        val dias = listOf("IvLunes", "IvMartes", "IvMiercoles", "IvJueves", "IvViernes", "IvSabado", "IvDomingo")
-
-        val jsonString = actividadesMP.sharedPref(this, "diasSemana", String::class.java)
-        val type = object : TypeToken<Map<String, String>>() {}.type
-        val recuperadoMap: Map<String, String> = Gson().fromJson(jsonString, type)
-        val mutableMap = recuperadoMap.toMutableMap()
-
-        for (dia in diasDeDescanso) {
-            val indice = diasDeLaSemana[dia.trim()]
-            if (indice != null) {
-                // Actualizar el ImageView y SharedPreferences
-                imageViews[indice].setImageResource(drawables[indice])
-                val nombreDelDia = "Iv" + dias[indice].replaceFirstChar { if (it.isLowerCase()) it.titlecase(
-                    Locale.getDefault()) else it.toString() }
-                mutableMap[nombreDelDia] =  "${dias[indice]}bien"
-            }
+        if(diasDeDescanso.contains(diasDeLaSemanaMap[diaDeLaSemana])){
+            actividadesMP.saveSharedPref(this, "actNotificacion", "Hoy es tu dia de descanso!")
+            actividadesMP.saveSharedPref(this, "actBotonEnviar", false)
+            binding.cTVnoti.text = actividadesMP.sharedPref(this, "actNotificacion", String::class.java)
+            binding.btnEnviarActividad.isEnabled = actividadesMP.sharedPref(this, "actBotonEnviar", Boolean::class.java) == true
         }
-
-        // Guardar el mapa actualizado en SharedPreferences
-        val nuevoJsonString = Gson().toJson(mutableMap.toMap())
-        actividadesMP.saveSharedPref(this, "diasSemana", nuevoJsonString)
-
     }
 
     @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
@@ -666,8 +665,6 @@ Log.d("color", "ingresa a color: $col $colorSeed")
                 //Tarea semanal
                 actMenu.AsignarTareas(this,"semanal","Tareassemanal")
 
-                asignaDescanso()
-
             }else{
                 val dias = listOf("IvLunes", "IvMartes", "IvMiercoles",
                     "IvJueves", "IvViernes", "IvSabado", "IvDomingo")
@@ -688,7 +685,7 @@ Log.d("color", "ingresa a color: $col $colorSeed")
                 }
             }
 
-
+            asignaDescanso()
         }
 
         //-----------------------
