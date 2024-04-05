@@ -124,7 +124,7 @@ class PrimeraVez : AppCompatActivity() {
             jsonObject.put("tipoFoto",actividades.sharedPref(this@PrimeraVez,"tipoFoto",String::class.java))
             jsonObject.put("promedio", 0)
             val jsonDatos = jsonObject.toString()
-            cFirebase.PostData(jsonDatos)
+            val task = cFirebase.PostData(jsonDatos)
 
             try {
                 binding.switchNotification.setOnCheckedChangeListener{_, isChecked ->
@@ -169,10 +169,14 @@ class PrimeraVez : AppCompatActivity() {
                 Log.e(TAG, "Error al actualizar los datos en Firebase", e)
             }
 
-            Handler(Looper.getMainLooper()).postDelayed({
+            task.addOnSuccessListener {
+                // Lanzar la nueva actividad aquí
                 val intent = Intent(this@PrimeraVez, MenuPrincipal::class.java)
                 startActivity(intent)
-            }, 25000)
+            }.addOnFailureListener { e ->
+                // Manejar el error aquí
+                Log.e(TAG, "Error al actualizar los datos en Firebase", e)
+            }
 
         } else {
             Toast.makeText(this, "Selecciona todos los campos.", Toast.LENGTH_SHORT).show()

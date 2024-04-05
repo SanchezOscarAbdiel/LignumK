@@ -306,7 +306,6 @@
         android:layout_height="195dp"
         android:alpha="0"
         app:cardElevation="20dp"
-
         android:onClick="cardSemanal"
         app:layout_constraintEnd_toEndOf="@id/cardTareasSemanales"
         app:layout_constraintTop_toTopOf="@id/cardTareasSemanales"/>

@@ -26,10 +26,12 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.getSystemService
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.lignumk.databinding.FragmentConfiguracionBinding
 import com.example.lignumk.databinding.FragmentTiendaBinding
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.google.gson.Gson
@@ -49,7 +51,37 @@ class Configuracion : BottomSheetDialogFragment() {
         notificaciones(activity)
         setDrawablesColor(activity)
         skins(activity)
+        binding.floatingTutorial.setOnClickListener { tutorial(activity) }
     }
+
+    private fun tutorial(activity: FragmentActivity) {
+        val inflater = LayoutInflater.from(activity)
+        val dialogView = inflater.inflate(R.layout.dialog_tutorial, null,true)
+        val carouselRecyclerView = dialogView.findViewById<RecyclerView>(R.id.carouselRecyclerView)
+        carouselRecyclerView.adapter = CarouselAdapter(images = getImages(), "Tutorial")
+
+        val alertDialog = MaterialAlertDialogBuilder(activity)
+            .setView(dialogView)
+            .setPositiveButton("Aceptar") { dialog, _ ->
+                dialog.dismiss()
+            }
+
+        alertDialog.show()
+    }
+
+    private fun getImages(): List<String> {
+        return listOf(
+            "https://files.catbox.moe/9lxvvn.png",
+            "https://files.catbox.moe/jnyond.png",
+            "https://files.catbox.moe/yu1fae.png",
+            "https://files.catbox.moe/11o8pb.png",
+            "https://files.catbox.moe/yoilkx.png",
+            "https://files.catbox.moe/jv1s8y.png",
+            "https://files.catbox.moe/jk7a4p.png",
+            "https://files.catbox.moe/0c8jpw.png",
+            "https://files.catbox.moe/k7w8mz.png")
+    }
+
     fun setDrawablesColor(activity: FragmentActivity){
         val col = actividades.sharedPref(activity, "Skin", Int::class.java)!!
         val color = ContextCompat.getColor(activity, col)
@@ -57,6 +89,7 @@ class Configuracion : BottomSheetDialogFragment() {
         binding.textView1.backgroundTintList = ColorStateList.valueOf(color)
         binding.textView2.backgroundTintList = ColorStateList.valueOf(color)
         binding.textView3.backgroundTintList = ColorStateList.valueOf(color)
+        binding.floatingTutorial.backgroundTintList = ColorStateList.valueOf(color)
     }
 
     data class Item(

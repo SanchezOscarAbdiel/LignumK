@@ -1,8 +1,10 @@
 package com.example.lignumk
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.appcompat.widget.AppCompatTextView
@@ -36,11 +38,18 @@ class CarouselAdapter(private val images: List<String>, private val text: String
         private val imageTextView: AppCompatTextView = view.findViewById(R.id.imageText)
 
         fun bind(imageUrl:String, imageText:String){
-            carouselImageView.load(imageUrl){
-                transformations(RoundedCornersTransformation(8f))
+            carouselImageView.apply {
+                scaleType = ImageView.ScaleType.CENTER_INSIDE
+                load(imageUrl){
+                    transformations(RoundedCornersTransformation(8f))
+                    listener(onError = { _, throwable ->
+                        Log.d("", throwable.toString())
+                    })
+                }
             }
             imageTextView.text = imageText
         }
+
     }
 
 }

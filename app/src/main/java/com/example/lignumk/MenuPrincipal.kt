@@ -73,6 +73,7 @@ class MenuPrincipal : AppCompatActivity() {
     lateinit var binding: ActivityMenuPrincipalBinding
     private lateinit var auth: FirebaseAuth
 
+    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMenuPrincipalBinding.inflate(layoutInflater)
@@ -81,7 +82,6 @@ class MenuPrincipal : AppCompatActivity() {
         taskViewModel = ViewModelProvider(this).get(TaskViewModel::class.java)
         VerificaPrimeraVez()
         setCardColor()
-        setDiasSemana(this)
         auth = Firebase.auth
         binding.CargaCircular.isVisible = false
         binding.progressIndicator.visibility = View.GONE
@@ -96,11 +96,6 @@ class MenuPrincipal : AppCompatActivity() {
         googleSignInClient = GoogleSignIn.getClient(this,gso)
 
         binding.lay.layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
-
-        if (!actividadesMP.sharedPref(this,"first_run",Boolean::class.java)!!) {
-            cardUsuario(this)
-        }
-
 
             Log.d(getString(R.string.menuPrincipal), "pickMedia en OnCreate, con ${titulo}, ${puntos},")
             pickMedia = registerPickMedia()
@@ -120,8 +115,12 @@ class MenuPrincipal : AppCompatActivity() {
         }
 
         leaderBoard()
-
         createNotificationChannel()
+        onInicio()
+        setDiasSemana(this)
+        if (!actividadesMP.sharedPref(this,"first_run",Boolean::class.java)!!) {
+            cardUsuario(this)
+        }
     }
 
     private fun createNotificationChannel() {
@@ -618,8 +617,7 @@ Log.d("dia", "dia de descanso: $diaDeLaSemana")
     }
 
     @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
-    override fun onStart() {
-        super.onStart()
+    fun onInicio() {
         // Obtiene la fecha almacenada previamente (si existe)
         val lastOpenDate = actividadesMP.sharedPref(contsto,LAST_OPEN_DATE,Long::class.java)
         // Obtiene la fecha actual

@@ -4,6 +4,7 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import android.content.Context
 import android.os.Environment
+import com.google.android.gms.tasks.Task
 import com.google.firebase.firestore.FieldValue
 import com.google.gson.Gson
 import org.json.JSONObject
@@ -51,36 +52,20 @@ class ConexionFirebase {
             }
     }
 
-    fun PostData(jsonData: String): CompletableFuture<Void> {
-        val future = CompletableFuture<Void>()
-        try {
-            // Parsear el JSON para obtener la colección, el documento y los campos
-            val jsonObject = JSONObject(jsonData)
-            val coleccion = jsonObject.getString("coleccion") ?: throw Exception("Colección no especificada")
-            val documento = jsonObject.getString("documento") ?: throw Exception("Documento no especificado")
-            val campos = HashMap<String, Any>()
-            for (key in jsonObject.keys()) {
-                if (key != "coleccion" && key != "documento") {
-                    campos[key] = jsonObject.get(key)
-                }
+    fun PostData(jsonData: String): Task<Void> {
+        val jsonObject = JSONObject(jsonData)
+        val coleccion = jsonObject.getString("coleccion") ?: throw Exception("Colección no especificada")
+        val documento = jsonObject.getString("documento") ?: throw Exception("Documento no especificado")
+        val campos = HashMap<String, Any>()
+        for (key in jsonObject.keys()) {
+            if (key != "coleccion" && key != "documento") {
+                campos[key] = jsonObject.get(key)
             }
-            // Crear una referencia al documento
-            val documentReference = db.collection(coleccion).document(documento)
-
-            // Actualizar los campos del documento
-            documentReference.set(campos)
-                .addOnSuccessListener {
-                    Log.d(TAG, "Documento actualizado con éxito")
-                    future.complete(null)
-                }
-                .addOnFailureListener { e ->
-                    Log.w(TAG, "Error al actualizar el documento", e)
-                }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error al procesar el JSON", e)
         }
-        return future
+        val documentReference = db.collection(coleccion).document(documento)
+        return documentReference.set(campos)
     }
+
 
     fun UpdateData(jsonData: String) {
         try {
