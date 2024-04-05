@@ -579,7 +579,7 @@ Log.d("dia", "dia de descanso: $diaDeLaSemana")
             }
 
 // Convierte el mapa mutable a JSON y guárdalo en SharedPreferences
-            val nuevoJsonString = Gson().toJson(mutableMap)
+            val nuevoJsonString = Gson().toJson(mutableMap)!!
             actividadesMP.saveSharedPref(this, "diasSemana", nuevoJsonString)
 
             val racha = actividadesMP.sharedPref(this, "racha", Int::class.java)
@@ -658,7 +658,7 @@ Log.d("dia", "dia de descanso: $diaDeLaSemana")
                         "IvJueves" to "jueves","IvViernes" to "viernes","IvSabado" to "sabado",
                         "IvDomingo" to "domingo")
 
-                val jsonString = Gson().toJson(diasSemana)
+                val jsonString = Gson().toJson(diasSemana)!!
 
                 actividadesMP.saveSharedPref(contsto,"diasSemana",jsonString)
 

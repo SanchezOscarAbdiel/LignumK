@@ -137,7 +137,7 @@ class Actividades{
                 "por titulo: '${titulo}' teniendo que responder la siguiente pregunta de opcion multiple:" +
                 "'${descripcion}'. esta fue la respuesta que selecciono: '${respuesta}', la respuesta correcta " +
                 "a la pregunta es: ${opcionCorrecta}. puntua su respuesta con un rango de 0 a '${puntos}' " +
-                "(escribe asi: -x/${puntos}-) y escribe un dato curioso corto acerca del tema o su respuesta " +
+                "(escribe asi: -x/${puntos}- por ejemplo -15/15-) y escribe un dato curioso corto acerca del tema o su respuesta " +
                 "que incite el uso de equipo de seguridad a pesar de no querer"
 
         generativeModel.generateContent(prompt) .text?.let { popRetroalimentacion(contexto, it, titulo,progressIndicator,"diaria", binding, puntos.toInt()) }
