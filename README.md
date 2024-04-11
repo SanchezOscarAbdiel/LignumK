@@ -38,6 +38,8 @@ Es el resumen semanal de tu actividad, cuando una actividad se marque como compl
 #### ⚒️ 3- Tarjeta de actividad diaria:
 Es la parte central de Lignum, cada dia se actualizará y te avisará de una nueva actividad, realizala como se indica en la siguiente sección y se te recompensará con monedas!
 
+
+
 4- La tarjeta de actividad semanal es tipo de actividad “especial” que dará mas monedas a cambio, a diferencia de la actividad diaria, la actividad semanal se centra en pedir feedback a los usuarios, ya sea sobre la aplicacion, su area de trabajo, o la empresa en general, asi como incentivar a proponer mejoras.
 
 5- La tienda es donde se pueden gastar monedas a cambio de elementos esteticos para la aplicacion o potenciadores para las actividades
@@ -49,3 +51,5 @@ Es la parte central de Lignum, cada dia se actualizará y te avisará de una nue
 8- Zona de retroalimentacion, la aplicacion toma ciertos datos estadisticos del trabajador y en base a ellos asigna una calificacion general
 
 9- Leaderboard, los 3 usuarios que tengan la racha mas grande serán mostrados en este apartado
+
+### Manual - Como realizar una actividad.
