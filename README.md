@@ -36,20 +36,51 @@ Es el resumen semanal de tu actividad, cuando una actividad se marque como compl
 ***Cada dia en verde equivale a un punto de racha***
 
 #### ⚒️ 3- Tarjeta de actividad diaria:
-Es la parte central de Lignum, cada dia se actualizará y te avisará de una nueva actividad, realizala como se indica en la siguiente sección y se te recompensará con monedas!
+Es la parte central de Lignum, cada dia se actualizará y te avisará de una nueva actividad, realizala como se indica y se te recompensará con monedas!
 
+Recuerda, solo tienes un intento al dia!
 
+<img src="https://github.com/SanchezOscarAbdiel/LignumK/assets/89820170/bcb46de5-31ed-4f26-91a2-0b30c1bf00f1" alt="drawing" width="550"/>
 
-4- La tarjeta de actividad semanal es tipo de actividad “especial” que dará mas monedas a cambio, a diferencia de la actividad diaria, la actividad semanal se centra en pedir feedback a los usuarios, ya sea sobre la aplicacion, su area de trabajo, o la empresa en general, asi como incentivar a proponer mejoras.
+#### 🛠️ 4- Tarjeta de actividad semanal
+Este tipo de actividad “especial” te dará mas monedas a cambio; a diferencia de la actividad diaria, la actividad semanal se centra en pedir feedback a los usuarios, ya sea sobre la aplicacion, su area de trabajo, o la empresa en general, asi como incentivar a proponer mejoras.
 
-5- La tienda es donde se pueden gastar monedas a cambio de elementos esteticos para la aplicacion o potenciadores para las actividades
+La tarea semanal solo se asignará **una vez a la semana**, los dias lunes. Si inicias sesión por primera vez un día diferente a los lunes, tendrás que esperar a la siguiente semana.
 
-6- Las insigias son otra forma de incentivo para los usuarios, en lugar de monedas se utiliza la racha, que se acumula realizando actividades diario, hay 4 tipo de insignias diferentes por ahora
+<img src="https://github.com/SanchezOscarAbdiel/LignumK/assets/89820170/5c239fe7-3223-4d6c-aa56-100565df56d1" alt="drawing" width="550"/>
 
-7- La configuracion permite cambiar los elementos esteticos comprados en la tienda, cambiar la foto de perfil o desactivar las notificaciones
+***Cuidado, Sam puede analizar las imagenes...***
 
-8- Zona de retroalimentacion, la aplicacion toma ciertos datos estadisticos del trabajador y en base a ellos asigna una calificacion general
+#### 🪙 5- La tienda 
+Es donde se pueden gastar monedas a cambio de elementos esteticos para la aplicacion o potenciadores para las actividades.
+Actualmente existen dos categorias de esteticos dentro de Lignum:
+  - Los avatares: Puedes personalizar la imagen que se muestra en la sección de "Tarea semanal" (Puedes conseguir un Avatar de Sam por 100 monedas!)
+  - Las skins: Se pueden cambiar los colores generales de la aplicación
 
-9- Leaderboard, los 3 usuarios que tengan la racha mas grande serán mostrados en este apartado
+Tambien están los potenciadores, son ayudas para realizar de forma mas facil la aplicación a cambio de monedas:
+  - Astillas: Aumenta x2 las monedas recibidas en la siguiente tarea
+  - Martillo del Alba: Obtén la respuesta para las preguntas de opción multiple
 
-### Manual - Como realizar una actividad.
+<img src="https://github.com/SanchezOscarAbdiel/LignumK/assets/89820170/37d4c51a-207a-40b7-96ae-8708cd64aa29" alt="drawing" width="550"/>
+
+#### 🎖️ 6- Las insigias 
+Son otra forma de incentivo para los usuarios, en lugar de monedas se utiliza la racha, que se acumula realizando actividades diario, hay 4 tipo de insignias diferentes
+
+![image](https://github.com/SanchezOscarAbdiel/LignumK/assets/89820170/feb1d7d4-f901-4ab3-beed-27e462f6e501)
+
+#### ⚙️ 7- La configuracion 
+Permite cambiar los elementos esteticos comprados en la tienda, cambiar la foto de perfil o desactivar las notificaciones
+
+<img src="https://github.com/SanchezOscarAbdiel/LignumK/assets/89820170/41fb384b-1d8a-4493-bb8c-b788ae7f4882" alt="drawing" width="350"/>
+
+#### ✅ 8- Zona de retroalimentacion
+La aplicacion toma ciertos datos estadisticos del usuario (como racha, calificación promedio, dias de actividad) y Sam en base a ellos asigna una calificacion general, así como
+pequeños consejos
+
+<img src="https://github.com/SanchezOscarAbdiel/LignumK/assets/89820170/aa7e9a2e-7942-461f-ad9b-6304c9fc9d01" alt="drawing" width="550"/>
+
+#### 🔝 9- Leaderboard
+Los 3 usuarios que tengan la racha mas grande serán mostrados en este apartado
+
+![image](https://github.com/SanchezOscarAbdiel/LignumK/assets/89820170/8710c3a2-2b94-4b37-be64-a2c28e073241)
+
