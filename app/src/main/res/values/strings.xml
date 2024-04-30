@@ -80,6 +80,7 @@
     , por ejemplo, si pasaron 100 dias desde que entró por primera vez hasta hoy, pero su racha es de 50\n
     ademas, si las calificaciones promediadas está por debajo del 70% se considera como ineficiente, recuerda
     dirigirte cordialmente hacia el usuario, ademas de usar pocas palabras, no mas de 50</string>
+    <string name="pv_13">Enviame notificaciones.</string>
     <!-- Identificadores de clases -->
 
 </resources>

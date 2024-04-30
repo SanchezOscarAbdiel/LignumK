@@ -49,6 +49,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import okhttp3.internal.notifyAll
+import org.json.JSONArray
 import org.json.JSONObject
 import java.lang.NullPointerException
 import java.time.format.DateTimeFormatter
@@ -114,13 +115,12 @@ class MenuPrincipal : AppCompatActivity() {
                     "podrás ganar una insignia de merito.",this)
         }
 
-        leaderBoard()
         createNotificationChannel()
         onInicio()
 
-        if (!actividadesMP.sharedPref(this,"first_run",Boolean::class.java)!!) {
+        /*if (!actividadesMP.sharedPref(this,"first_run",Boolean::class.java)!!) {
             cardUsuario(this)
-        }
+        }*/
     }
 
     private fun createNotificationChannel() {
@@ -154,9 +154,10 @@ class MenuPrincipal : AppCompatActivity() {
     var tipo = ""
     override fun onResume() {
         super.onResume()
-        Log.d("OnResume","Entrando a onResume")
+        asignaDescanso()
         cardUsuario(this)
         setDiasSemana(this)
+        leaderBoard()
     }
     fun setCardColor(){
         val col = actividadesMP.sharedPref(contsto,"Skin",Int::class.java)!!
@@ -527,34 +528,47 @@ Log.d("color", "ingresa a color: $col $colorSeed")
     )
 
     fun leaderBoard() {
-        val jsonUsuario = actividades.leeArchivo(this,"Usuarios")
-        val jsonUsuarioString = jsonUsuario.toString()
-        val listType = object : TypeToken<List<Usuario>>() {}.type
-        val items: List<Usuario> = Gson().fromJson(jsonUsuarioString , listType)
+        var jsonUsuario: JSONArray = JSONArray()
+        Handler(Looper.getMainLooper()).postDelayed({
+            jsonUsuario = actividades.leeArchivo(this,"Usuarios")
 
-        // Ordenar la lista de usuarios por la racha en orden descendente
-        val usuariosOrdenados = items.sortedByDescending { it.racha }
-        // Tomar solo los primeros tres usuarios de la lista ordenada
-        val primerosTresUsuarios = usuariosOrdenados.take(3)
+            val jsonUsuarioString = jsonUsuario.toString()
+            val listType = object : TypeToken<List<Usuario>>() {}.type
+            val items: List<Usuario> = Gson().fromJson(jsonUsuarioString , listType)
 
-        // Crear una lista de pares (fotoPerfil, racha) de los tres usuarios con la racha más alta
-        val photoUrlsWithRacha = primerosTresUsuarios.map { Pair(it.fotoPerfil, it.racha) }
+            // Ordenar la lista de usuarios por la racha en orden descendente
+            val usuariosOrdenados = items.sortedByDescending { it.racha }
+            // Tomar solo los primeros tres usuarios de la lista ordenada
+            val primerosTresUsuarios = usuariosOrdenados.take(3)
 
-        // Crear y asignar el adaptador del carrusel con la lista de pares (fotoPerfil, racha)
-        binding.carouselLeaderboard.adapter = CarouselAdapterLeader(imagesWithRacha = photoUrlsWithRacha)
+            // Crear una lista de pares (fotoPerfil, racha) de los tres usuarios con la racha más alta
+            val photoUrlsWithRacha = primerosTresUsuarios.map { Pair(it.fotoPerfil, it.racha) }
+
+            // Crear y asignar el adaptador del carrusel con la lista de pares (fotoPerfil, racha)
+            binding.carouselLeaderboard.adapter = CarouselAdapterLeader(imagesWithRacha = photoUrlsWithRacha)
+        }, 3000)
     }
 
 
-    private fun asignaDescanso(){
-        val descanso = actividadesMP.sharedPref(this,"dDescanso",String::class.java)!!
+
+    private fun asignaDescanso() {
+        val descanso = actividadesMP.sharedPref(this, "dDescanso", String::class.java)!!
 
         val diaDeLaSemana = LocalDate.now().dayOfWeek.value
         val diasDeDescanso = descanso.removeSurrounding("[", "]").split(", ").map { it.lowercase() }
 
 // Mapa para convertir el valor numérico del día de la semana a texto
-        val diasDeLaSemanaMap = mapOf(1 to "lunes", 2 to "martes", 3 to "miercoles", 4 to "jueves", 5 to "viernes", 6 to "sabado", 7 to "domingo")
-Log.d("dia", "dia de descanso: $diaDeLaSemana")
-        if(diaDeLaSemana == 1) {
+        val diasDeLaSemanaMap = mapOf(
+            1 to "lunes",
+            2 to "martes",
+            3 to "miercoles",
+            4 to "jueves",
+            5 to "viernes",
+            6 to "sabado",
+            7 to "domingo"
+        )
+        Log.d("dia", "dia de descanso: $diaDeLaSemana")
+
             val jsonString = actividadesMP.sharedPref(this, "diasSemana", String::class.java)
             val type = object : TypeToken<Map<String, String>>() {}.type
             val recuperadoMap: Map<String, String> = Gson().fromJson(jsonString, type)
@@ -570,7 +584,7 @@ Log.d("dia", "dia de descanso: $diaDeLaSemana")
 // Convierte el mapa mutable a JSON y guárdalo en SharedPreferences
             val nuevoJsonString = Gson().toJson(mutableMap)!!
             actividadesMP.saveSharedPref(this, "diasSemana", nuevoJsonString)
-
+            if (diaDeLaSemana == 1) {
             val racha = actividadesMP.sharedPref(this, "racha", Int::class.java)
             actividadesMP.saveSharedPref(this, "racha", racha!! + 2)
 
@@ -598,11 +612,13 @@ Log.d("dia", "dia de descanso: $diaDeLaSemana")
 
             cFirebaseA.UpdateData(jsonDatos)
         }
-        if(diasDeDescanso.contains(diasDeLaSemanaMap[diaDeLaSemana])){
+        if (diasDeDescanso.contains(diasDeLaSemanaMap[diaDeLaSemana])) {
             actividadesMP.saveSharedPref(this, "actNotificacion", "Hoy es tu dia de descanso!")
             actividadesMP.saveSharedPref(this, "actBotonEnviar", false)
-            binding.cTVnoti.text = actividadesMP.sharedPref(this, "actNotificacion", String::class.java)
-            binding.btnEnviarActividad.isEnabled = actividadesMP.sharedPref(this, "actBotonEnviar", Boolean::class.java) == true
+            binding.cTVnoti.text =
+                actividadesMP.sharedPref(this, "actNotificacion", String::class.java)
+            binding.btnEnviarActividad.isEnabled =
+                actividadesMP.sharedPref(this, "actBotonEnviar", Boolean::class.java) == true
         }
     }
 
@@ -672,8 +688,6 @@ Log.d("dia", "dia de descanso: $diaDeLaSemana")
                     actividadesMP.saveSharedPref(contsto,"diasSemana",nuevoJsonString)
                 }
             }
-
-            asignaDescanso()
         }
 
         //-----------------------

@@ -97,9 +97,7 @@ class PrimeraVez : AppCompatActivity() {
 
 
     fun seleccionaImagen(view: View) {
-
         pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-
     }
 
     fun continuar(view: View) {
@@ -190,12 +188,7 @@ class PrimeraVez : AppCompatActivity() {
         }
     }
 
-    override fun onBackPressed() {
-        super.onBackPressed()
-        actividades.anuncio("ALERTA","Tienes que completar la configuración. \n(Se puede producir un error)",this)
-    }
-
-    fun rellenaSpin() {
+    private fun rellenaSpin() {
         val adapter = ArrayAdapter.createFromResource(this, R.array.combo_puestos, android.R.layout.simple_spinner_item)
         binding.SpnPuestos.adapter = adapter
 

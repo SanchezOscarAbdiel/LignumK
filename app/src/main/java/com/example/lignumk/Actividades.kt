@@ -360,7 +360,13 @@ class Actividades{
 
             else -> {
                 Log.d("MiApp", "No se encontró el usuario")
-                null
+                if (tipo == Int::class) {
+                    return 0 as T
+                }
+                if (tipo == String::class){
+                    return "0" as T
+                }else
+                    return null
             }
         }
     }
