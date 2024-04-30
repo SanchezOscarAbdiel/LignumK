@@ -43,7 +43,9 @@ import java.util.Calendar
 import android.net.Uri
 import android.provider.Settings
 import android.util.TypedValue
-
+import androidx.core.view.children
+import com.google.android.material.chip.ChipGroup
+import java.util.LinkedList
 
 
 class PrimeraVez : AppCompatActivity() {
@@ -66,7 +68,6 @@ class PrimeraVez : AppCompatActivity() {
         setContentView(binding.root)
 
         auth = Firebase.auth
-        actividadesMP.saveSharedPref(this,"first_run",false)
         pickMedia = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
             binding.ImButtonFotoPerfil.setImageURI(uri)
             actividades.uriToBase64(this,uri!!,"fotoPerfil")
@@ -108,8 +109,10 @@ class PrimeraVez : AppCompatActivity() {
             chip.text.toString()
         }
 
-        if (chipsSeleccionados.isNotEmpty() && esAut && esSpn) {
+        if (chipsSeleccionados.size > 2)
+            Toast.makeText(this, "Demasiados dias de descanso!!", Toast.LENGTH_SHORT).show()
 
+        if (chipsSeleccionados.isNotEmpty() && esAut && esSpn && chipsSeleccionados.size <= 2) {
             val jsonObject = JSONObject()
             jsonObject.put("coleccion", "Usuarios")
             jsonObject.put("documento", puid)
@@ -170,6 +173,9 @@ class PrimeraVez : AppCompatActivity() {
             }
 
             task.addOnSuccessListener {
+                //Se completa el proceso de primera vez
+                actividadesMP.saveSharedPref(this,"first_run",false)
+
                 // Lanzar la nueva actividad aquí
                 val intent = Intent(this@PrimeraVez, MenuPrincipal::class.java)
                 startActivity(intent)
@@ -179,8 +185,14 @@ class PrimeraVez : AppCompatActivity() {
             }
 
         } else {
+            binding.progressIndicatorPV.visibility = View.GONE
             Toast.makeText(this, "Selecciona todos los campos.", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    override fun onBackPressed() {
+        super.onBackPressed()
+        actividades.anuncio("ALERTA","Tienes que completar la configuración. \n(Se puede producir un error)",this)
     }
 
     fun rellenaSpin() {

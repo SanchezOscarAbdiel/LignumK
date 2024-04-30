@@ -117,7 +117,7 @@ class MenuPrincipal : AppCompatActivity() {
         leaderBoard()
         createNotificationChannel()
         onInicio()
-        setDiasSemana(this)
+
         if (!actividadesMP.sharedPref(this,"first_run",Boolean::class.java)!!) {
             cardUsuario(this)
         }
@@ -156,6 +156,7 @@ class MenuPrincipal : AppCompatActivity() {
         super.onResume()
         Log.d("OnResume","Entrando a onResume")
         cardUsuario(this)
+        setDiasSemana(this)
     }
     fun setCardColor(){
         val col = actividadesMP.sharedPref(contsto,"Skin",Int::class.java)!!
@@ -362,14 +363,8 @@ Log.d("color", "ingresa a color: $col $colorSeed")
                     ,Exception().stackTrace[0].methodName+
                         "➡ popEscritura con ${binding.cTVtitulo.text}, ${ binding.cTVDescripcion.text} , ${puntos}")
 
-                actividadesMP.popEscritura(
-                    contsto,
-                    binding.cTVtitulo.text.toString(),
-                    binding.cTVDescripcion.text.toString(),
-                    puntos,
-                    binding.progressIndicator,
-                    binding
-                )
+                actividadesMP.popEscritura(contsto, binding.cTVtitulo.text.toString(), binding.cTVDescripcion.text.toString(), puntos, binding.progressIndicator,
+                    binding)
             }
             "foto" -> pickMedia.launch(PickVisualMediaRequest())
             "seleccionMultiple" -> {
@@ -377,12 +372,7 @@ Log.d("color", "ingresa a color: $col $colorSeed")
                     ,Exception().stackTrace[0].methodName+
                             "➡ popSeleccionMultipe con ${binding.cTVtitulo.text}, ${ binding.cTVDescripcion.text} , ${puntos}")
 
-                actividadesMP.popSeleccionMultiple(
-                    contsto,
-                    binding.cTVtitulo.text.toString(),
-                    binding.cTVDescripcion.text.toString(),
-                    puntos,
-                    binding.progressIndicator,
+                actividadesMP.popSeleccionMultiple(contsto, binding.cTVtitulo.text.toString(), binding.cTVDescripcion.text.toString(), puntos, binding.progressIndicator,
                     binding
                 )
             }
@@ -700,7 +690,6 @@ Log.d("dia", "dia de descanso: $diaDeLaSemana")
 
     private fun VerificaPrimeraVez(){
         if (actividadesMP.sharedPref(contsto,"first_run",Boolean::class.java) == true) {
-
             finish()
             val intent = Intent(this, PrimeraVez::class.java)
             startActivity(intent)
