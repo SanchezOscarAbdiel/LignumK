@@ -51,6 +51,11 @@ import java.util.Date
 import java.util.concurrent.TimeUnit
 import kotlin.math.min
 import kotlin.reflect.KClass
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.os.Build
+import android.widget.Button
+
 val cFirebaseA = ConexionFirebase()
 @SuppressLint("StaticFieldLeak")
 val cMenuPrincipal = MenuPrincipal()
@@ -61,6 +66,20 @@ class Actividades{
         Log.d(fileName, message)
     }
 
+    fun isNetworkAvailable(context: Context): Boolean {
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val network = connectivityManager.activeNetwork ?: return false
+        val activeNetwork = connectivityManager.getNetworkCapabilities(network) ?: return false
+        return when {
+            activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> true
+            activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> true
+            // for other device how are able to connect with Ethernet
+            activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> true
+            // for check internet over Bluetooth
+            activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_BLUETOOTH) -> true
+            else -> false
+        }
+    }
 
     fun leeArchivo(contexto: Context, nombre: String): JSONArray {
         val archivo = File(contexto.getExternalFilesDir(null), "$nombre.json")
@@ -123,7 +142,7 @@ class Actividades{
 
         val prompt = "A un trabajador de una empresa madedera se le asignó una encuesta, teniendo que " +
                 "responder las siguientes preguntas:'${descripcion}'. estas fueron sus respuestas: " +
-                "'${respuesta}'.escribe: -${puntos}/${puntos}-(ejemplo: -5/10-) " +
+                "'${respuesta}'.escribe: -${puntos}/${puntos}- (ejemplo: -10/10-), recuerda poner ambos guiones" +
                 "y escribe un pequeño comentario constructivo en base a sus respuestas"
 
         generativeModel.generateContent(prompt) .text?.let { popRetroalimentacion(contexto, it, titulo,progressIndicator,tipo, binding, puntos.toInt()) }
@@ -280,6 +299,7 @@ class Actividades{
                     samAItexto(contexto,titulo, descripcion, inputText, puntos,progressIndicator, binding)
                 }
             }
+            .setCancelable(false)
             .show()
 
         // Establecer un TextWatcher en el EditText
@@ -330,6 +350,7 @@ class Actividades{
                     }
                 }
             }
+            .setCancelable(false)
             .show()
     }
 
@@ -461,6 +482,7 @@ class Actividades{
 
             }
             .setNegativeButton("Cancelar", null)
+            .setCancelable(false)
             .show()
 
         texto.addTextChangedListener(object : TextWatcher {
@@ -479,6 +501,7 @@ class Actividades{
     fun popEncuesta(contexto: Context, titulo: String, descripcion: String, puntos: String,progressIndicator: LinearProgressIndicator,binding: ActivityMenuPrincipalBinding){
         val dialogView = LayoutInflater.from(contexto).inflate(R.layout.dialog_survey, null)
         val container = dialogView.findViewById<LinearLayout>(R.id.container)
+        val btnAceptar = dialogView.findViewById<Button>(R.id.btnAceptar)
 
         val (_, opciones) = jsonBuscado(contexto, "Tareassemanal","titulo",titulo,"pregunta") ?: Pair(null, null)
 
@@ -494,23 +517,23 @@ class Actividades{
             container.addView(answerEditText)
         }
 
-        MaterialAlertDialogBuilder(contexto)
+        val dialog = MaterialAlertDialogBuilder(contexto)
             .setTitle(titulo)
             .setMessage(descripcion)
             .setView(dialogView)
-            .setNeutralButton("Cancelar") { dialog, which ->
-
-            }
-            .setPositiveButton("Aceptar") { dialog, which ->
-                val answers = editTexts.map { it.text.toString() }
-                saveSharedPref(contexto,"respuestasSemanal",answers.toString())
-                CoroutineScope(Dispatchers.Main).launch {
-                        samAIEncuesta(contexto, titulo, opciones.toString(), answers.toString(), puntos, progressIndicator,"semanal", binding)
-                }
-            }
+            .setCancelable(false)
             .show()
 
+        btnAceptar.setOnClickListener {
+            val answers = editTexts.map { it.text.toString() }
+            saveSharedPref(contexto,"respuestasSemanal",answers.toString())
+            CoroutineScope(Dispatchers.Main).launch {
+                samAIEncuesta(contexto, titulo, opciones.toString(), answers.toString(), puntos, progressIndicator,"semanal", binding)
+            }
+            dialog.dismiss() // Cierra el diálogo
+        }
     }
+
 
     fun popSeleccionMultiple(contexto: Context,titulo: String, descripcion: String,puntos: String,progressIndicator: LinearProgressIndicator, binding: ActivityMenuPrincipalBinding){
         val (json, opciones) = jsonBuscado(contexto, "Tareas","titulo",titulo,"opcion") ?: Pair(null, null)
@@ -540,6 +563,7 @@ class Actividades{
                     dialog.cancel()
                     }
             }
+            .setCancelable(false)
         dialog.show()
     }
 
@@ -583,6 +607,7 @@ class Actividades{
             .setPositiveButton("Aceptar") { dialog, _ ->
             dialog.dismiss()
             }
+            .setCancelable(false)
             .show()
     }
     fun Insignias(contexto: Context) {

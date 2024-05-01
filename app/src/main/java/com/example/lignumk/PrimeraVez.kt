@@ -45,6 +45,7 @@ import android.provider.Settings
 import android.util.TypedValue
 import androidx.core.view.children
 import com.google.android.material.chip.ChipGroup
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import java.util.LinkedList
 
 
@@ -66,7 +67,17 @@ class PrimeraVez : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityPrimeraVezBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
+        if (!actividadesMP.isNetworkAvailable(this)){
+            MaterialAlertDialogBuilder(this)
+                .setTitle("No hay conexión a internet")
+                .setMessage("Conectate a WIFI o datos para usar la aplicación.")
+                .setPositiveButton("Aceptar") { dialog, _ ->
+                    dialog.dismiss()
+                    this.finishAffinity()
+                }
+                .setCancelable(false)
+                .show()
+        }
         auth = Firebase.auth
         pickMedia = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
             binding.ImButtonFotoPerfil.setImageURI(uri)

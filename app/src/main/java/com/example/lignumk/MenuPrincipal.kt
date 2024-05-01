@@ -82,6 +82,18 @@ class MenuPrincipal : AppCompatActivity() {
 
         taskViewModel = ViewModelProvider(this).get(TaskViewModel::class.java)
         VerificaPrimeraVez()
+
+        if (!actividadesMP.isNetworkAvailable(this)){
+            MaterialAlertDialogBuilder(this)
+                .setTitle("No hay conexión a internet")
+                .setMessage("Conectate a WIFI o datos para usar la aplicación.")
+                .setPositiveButton("Aceptar") { dialog, _ ->
+                    dialog.dismiss()
+                    this.finishAffinity()
+                }
+                .setCancelable(false)
+                .show()
+        }
         setCardColor()
         auth = Firebase.auth
         binding.CargaCircular.isVisible = false
@@ -302,7 +314,7 @@ Log.d("color", "ingresa a color: $col $colorSeed")
         tipo = "semanal"
 
         Log.d(getString(R.string.menuPrincipal),"Card semanal con ${puntos}, ${titulo}, ${descripcion}, $tipo")
-
+        Log.d("A", sharedPref.getString("subtipoSemanal", "")!!)
         when (sharedPref.getString("subtipoSemanal", "")) {
             "encuesta" -> {
                 actividadesMP.log(getString(R.string.menuPrincipal)+"➡ "+getString(R.string.actividades)
@@ -331,9 +343,18 @@ Log.d("color", "ingresa a color: $col $colorSeed")
                     .show()
 
             }
+
+            else -> {
+                actividadesMP.anuncio(
+                    "¿Estás viendo este mensaje?", "Es porque no te registraste el lunes!" +
+                            "\nLas actividades semanales se asignan cada lunes!", this
+                )
+                binding.progressIndicator.visibility = View.GONE
+                binding.CargaCircular.visibility = View.GONE
+            }
         }
 
-        binding.progressIndicator.visibility = View.GONE
+
     }
 
     fun getImages(context: Context):List<String>{
@@ -409,7 +430,7 @@ Log.d("color", "ingresa a color: $col $colorSeed")
                     actividadesMP.leeArchivo(context, "Usuarios"),
                     uid, "monedas", Int::class
                 ).toString()
-                binding.tvMonedas.text = monedas
+                binding.tvMonedas.text = "$ "+ monedas
             } catch (e: NullPointerException) {
                 // Si se produce una excepción, reintenta después de un corto intervalo de tiempo
                 Handler(Looper.getMainLooper()).postDelayed({
@@ -548,8 +569,6 @@ Log.d("color", "ingresa a color: $col $colorSeed")
             binding.carouselLeaderboard.adapter = CarouselAdapterLeader(imagesWithRacha = photoUrlsWithRacha)
         }, 3000)
     }
-
-
 
     private fun asignaDescanso() {
         val descanso = actividadesMP.sharedPref(this, "dDescanso", String::class.java)!!
