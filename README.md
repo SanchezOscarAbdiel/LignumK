@@ -12,7 +12,7 @@ Con el auge de los chatbot basados en ChatGPT se ha decidido implementar de form
 SamAI se utiliza dentro de la aplicación para calificar las actividades de los usuarios y analizar su progreso, dando retroalimentación utilizando lenguaje natural.
 
 ## Como iniciar
-Descarga la ultima versión estable de Lignum desde este enlace: [https://github.com/SanchezOscarAbdiel/LignumK/releases/download/apk/app-debug.apk]
+Descarga la ultima versión estable de Lignum desde este enlace: [https://github.com/SanchezOscarAbdiel/LignumK/releases/tag/apk]
 
 ### Manual - Iniciando sesión.
 
